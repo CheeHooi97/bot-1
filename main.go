@@ -216,18 +216,18 @@ func processCandle(c Candle, symbol string) {
 
 	if buySignal && (state == 0 || state == -1) {
 		log.Println("BUY signal triggered")
-		err := placeOrder(symbol, "BUY")
-		if err == nil {
-			state = 1
-		}
+		// err := placeOrder(symbol, "BUY")
+		// if err == nil {
+		// 	state = 1
+		// }
 	}
 
 	if sellSignal && (state == 0 || state == 1) {
 		log.Println("SELL signal triggered")
-		err := placeOrder(symbol, "SELL")
-		if err == nil {
-			state = -1
-		}
+		// err := placeOrder(symbol, "SELL")
+		// if err == nil {
+		// 	state = -1
+		// }
 	}
 }
 
