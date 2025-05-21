@@ -36,6 +36,7 @@ const (
 	volumeLookback = 10
 	bbLength       = 20
 	bbMult         = 2.0
+	tradeUSDT      = 500.0 // USDT per trade
 )
 
 // State to track positions: 0=flat, 1=long, -1=short
@@ -47,6 +48,11 @@ var volumes []float64
 
 // Binance client
 var client *binance.Client
+
+// Trading simulation variables
+var balance = 10000.0 // Starting balance in USDT
+var positionSize = 0.0
+var entryPrice = 0.0
 
 func main() {
 	// load config
@@ -74,7 +80,6 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	log.Println("test")
 	log.Println("Bot started. Waiting for live candle data...")
 
 	for {
@@ -191,8 +196,8 @@ func processCandle(c Candle, symbol string) {
 	upper := basis + bbMult*stdDev
 	lower := basis - bbMult*stdDev
 
-	rawBuy := (rsiVal < 35 && highVolume && (greenCandle || (redCandle && bottomWickPerc > 60))) || extremeHighVolume && c.Close <= lower
-	rawSell := (rsiVal > 65 && highVolume && (redCandle || (greenCandle && topWickPerc > 60))) || extremeHighVolume && c.Close >= upper
+	rawBuy := (rsiVal < 35 && highVolume && (greenCandle || (redCandle && bottomWickPerc > 60))) || (extremeHighVolume && c.Close <= lower)
+	rawSell := (rsiVal > 65 && highVolume && (redCandle || (greenCandle && topWickPerc > 60))) || (extremeHighVolume && c.Close >= upper)
 
 	canLong := true  // Assuming both long and short allowed
 	canShort := true // Adjust as needed
@@ -200,28 +205,66 @@ func processCandle(c Candle, symbol string) {
 	buySignal := rawBuy && canLong
 	sellSignal := rawSell && canShort
 
+	// Show unrealized PnL and balance
+	if state == 1 { // long
+		unrealizedPnL := (c.Close - entryPrice) * positionSize
+		log.Printf("[LONG] Price: %.2f Entry: %.2f Size: %.4f BTC Unrealized PnL: %.2f USDT Balance: %.2f USDT", c.Close, entryPrice, positionSize, unrealizedPnL, balance)
+	} else if state == -1 { // short
+		unrealizedPnL := (entryPrice - c.Close) * math.Abs(positionSize)
+		log.Printf("[SHORT] Price: %.2f Entry: %.2f Size: %.4f BTC Unrealized PnL: %.2f USDT Balance: %.2f USDT", c.Close, entryPrice, math.Abs(positionSize), unrealizedPnL, balance)
+	} else {
+		log.Printf("[FLAT] Price: %.2f Balance: %.2f USDT", c.Close, balance)
+	}
+
 	if buySignal && (state == 0 || state == -1) {
-		log.Println("BUY signal triggered")
-		// err := placeOrder(symbol, "BUY")
-		// if err == nil {
-		state = 1
-		log.Printf("Candle Close: %.2f RSI: %.2f Volume: %.2f AvgVol: %.2f Buy: %v Sell: %v", c.Close, rsiVal, c.Volume, avgVolume, buySignal, sellSignal)
-		log.Println("Entered LONG position")
-		// }
+		if state == -1 {
+			// Closing short position first: buy BTC to cover short
+			closeAmount := math.Abs(positionSize)
+			profit := (entryPrice - c.Close) * closeAmount
+			balance += tradeUSDT + profit
+			log.Printf("Closing SHORT position: bought %.4f BTC at %.2f, profit: %.2f USDT", closeAmount, c.Close, profit)
+			positionSize = 0
+			entryPrice = 0
+			state = 0
+		}
+		if balance >= tradeUSDT {
+			// Open long position
+			size := tradeUSDT / c.Close
+			positionSize = size
+			entryPrice = c.Close
+			balance -= tradeUSDT
+			state = 1
+			log.Printf("Opened LONG position: bought %.4f BTC at %.2f, spent %.2f USDT, remaining balance %.2f USDT", size, c.Close, tradeUSDT, balance)
+		} else {
+			log.Println("Insufficient balance to open LONG position")
+		}
 	}
 
 	if sellSignal && (state == 0 || state == 1) {
-		log.Println("SELL signal triggered")
-		// err := placeOrder(symbol, "SELL")
-		// if err == nil {
-		state = -1
-		log.Printf("Candle Close: %.2f RSI: %.2f Volume: %.2f AvgVol: %.2f Buy: %v Sell: %v", c.Close, rsiVal, c.Volume, avgVolume, buySignal, sellSignal)
-		log.Println("Entered SHORT position")
-		// }
+		if state == 1 {
+			// Closing long position first: sell BTC
+			profit := (c.Close - entryPrice) * positionSize
+			balance += tradeUSDT + profit // Return initial tradeUSDT + profit
+			log.Printf("Closing LONG position: sold %.4f BTC at %.2f, profit: %.2f USDT", positionSize, c.Close, profit)
+			positionSize = 0
+			entryPrice = 0
+			state = 0
+		}
+		if balance >= tradeUSDT {
+			// Open short position
+			size := tradeUSDT / c.Close
+			positionSize = -size
+			entryPrice = c.Close
+			balance -= tradeUSDT
+			state = -1
+			log.Printf("Opened SHORT position: sold short %.4f BTC at %.2f, used %.2f USDT margin, remaining balance %.2f USDT", size, c.Close, tradeUSDT, balance)
+		} else {
+			log.Println("Insufficient balance to open SHORT position")
+		}
 	}
 }
 
-// placeOrder submits a market order to Binance
+// placeOrder submits a market order to Binance (currently unused)
 func placeOrder(symbol, side string) error {
 	sideType := binance.SideTypeBuy
 	if side == "SELL" {
