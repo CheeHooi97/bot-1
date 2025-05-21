@@ -206,7 +206,8 @@ func processCandle(c Candle, symbol string) {
 		log.Println("BUY signal triggered")
 		// err := placeOrder(symbol, "BUY")
 		// if err == nil {
-		// 	state = 1
+		state = 1
+		log.Println("Entered LONG position")
 		// }
 	}
 
@@ -214,7 +215,8 @@ func processCandle(c Candle, symbol string) {
 		log.Println("SELL signal triggered")
 		// err := placeOrder(symbol, "SELL")
 		// if err == nil {
-		// 	state = -1
+		state = -1
+		log.Println("Entered SHORT position")
 		// }
 	}
 }
