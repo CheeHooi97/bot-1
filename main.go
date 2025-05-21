@@ -14,7 +14,7 @@ func main() {
 	log.Println("Key:", config.BinanceApiKey)
 	log.Println("Secret:", config.BinanceApiSecret)
 
-	go bot.BTC()
-	go bot.ETH()
-	select {}
+	bot.BTC()
+	// bot.ETH()
+	// select {}
 }
