@@ -205,22 +205,16 @@ func processCandle(c Candle, symbol string) {
 	buySignal := rawBuy && canLong
 	sellSignal := rawSell && canShort
 
-	// Show unrealized PnL and balance
-	if state == 1 { // long
-		unrealizedPnL := (c.Close - entryPrice) * positionSize
-		log.Printf("[LONG] Price: %.2f Entry: %.2f Size: %.4f BTC Unrealized PnL: %.2f USDT Balance: %.2f USDT", c.Close, entryPrice, positionSize, unrealizedPnL, balance)
-	} else if state == -1 { // short
-		unrealizedPnL := (entryPrice - c.Close) * math.Abs(positionSize)
-		log.Printf("[SHORT] Price: %.2f Entry: %.2f Size: %.4f BTC Unrealized PnL: %.2f USDT Balance: %.2f USDT", c.Close, entryPrice, math.Abs(positionSize), unrealizedPnL, balance)
-	}
+	// === ONLY LOG ON POSITION CHANGE, NOT EVERY CANDLE ===
 
+	// Closing SHORT position and opening LONG
 	if buySignal && (state == 0 || state == -1) {
 		if state == -1 {
 			// Closing short position first: buy BTC to cover short
 			closeAmount := math.Abs(positionSize)
 			profit := (entryPrice - c.Close) * closeAmount
 			balance += tradeUSDT + profit
-			log.Printf("Closing SHORT position: bought %.4f BTC at %.2f, profit: %.2f USDT", closeAmount, c.Close, profit)
+			log.Printf("Closing SHORT position: bought %.4f BTC at %.2f, profit: %.2f USDT, balance: %.2f USDT", closeAmount, c.Close, profit, balance)
 			positionSize = 0
 			entryPrice = 0
 			state = 0
@@ -236,14 +230,16 @@ func processCandle(c Candle, symbol string) {
 		} else {
 			log.Println("Insufficient balance to open LONG position")
 		}
+		return
 	}
 
+	// Closing LONG position and opening SHORT
 	if sellSignal && (state == 0 || state == 1) {
 		if state == 1 {
 			// Closing long position first: sell BTC
 			profit := (c.Close - entryPrice) * positionSize
 			balance += tradeUSDT + profit // Return initial tradeUSDT + profit
-			log.Printf("Closing LONG position: sold %.4f BTC at %.2f, profit: %.2f USDT", positionSize, c.Close, profit)
+			log.Printf("Closing LONG position: sold %.4f BTC at %.2f, profit: %.2f USDT, balance: %.2f USDT", positionSize, c.Close, profit, balance)
 			positionSize = 0
 			entryPrice = 0
 			state = 0
@@ -259,7 +255,10 @@ func processCandle(c Candle, symbol string) {
 		} else {
 			log.Println("Insufficient balance to open SHORT position")
 		}
+		return
 	}
+
+	// If holding a position (long or short), no logs to avoid flooding logs every candle
 }
 
 // placeOrder submits a market order to Binance (currently unused)
