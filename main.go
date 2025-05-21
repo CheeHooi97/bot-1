@@ -58,7 +58,7 @@ func main() {
 	client = binance.NewClient(config.BinanceApiKey, config.BinanceApiSecret)
 
 	symbol := "btcusdt"
-	interval := "15m"
+	interval := "1m"
 
 	// Connect to Binance WebSocket for kline data
 	wsURL := fmt.Sprintf("wss://stream.binance.com:9443/ws/%s@kline_%s", symbol, interval)
