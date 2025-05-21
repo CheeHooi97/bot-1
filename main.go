@@ -212,8 +212,6 @@ func processCandle(c Candle, symbol string) {
 	} else if state == -1 { // short
 		unrealizedPnL := (entryPrice - c.Close) * math.Abs(positionSize)
 		log.Printf("[SHORT] Price: %.2f Entry: %.2f Size: %.4f BTC Unrealized PnL: %.2f USDT Balance: %.2f USDT", c.Close, entryPrice, math.Abs(positionSize), unrealizedPnL, balance)
-	} else {
-		log.Printf("[FLAT] Price: %.2f Balance: %.2f USDT", c.Close, balance)
 	}
 
 	if buySignal && (state == 0 || state == -1) {
