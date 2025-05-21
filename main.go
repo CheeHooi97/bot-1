@@ -52,6 +52,9 @@ func main() {
 	// load config
 	config.LoadConfig()
 
+	log.Println("Key:", config.BinanceApiKey)
+	log.Println("Secret:", config.BinanceApiSecret)
+
 	client = binance.NewClient(config.BinanceApiKey, config.BinanceApiSecret)
 
 	symbol := "btcusdt"
@@ -71,6 +74,7 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
 
+	log.Println("test")
 	log.Println("Bot started. Waiting for live candle data...")
 
 	for {
@@ -109,17 +113,17 @@ func main() {
 				continue
 			}
 
-			fmt.Println("Open")
-			fmt.Println(candle.Open)
+			log.Println("Open")
+			log.Println(candle.Open)
 
-			fmt.Println("Close")
-			fmt.Println(candle.Close)
+			log.Println("Close")
+			log.Println(candle.Close)
 
-			fmt.Println("High")
-			fmt.Println(candle.High)
+			log.Println("High")
+			log.Println(candle.High)
 
-			fmt.Println("Low")
-			fmt.Println(candle.Low)
+			log.Println("Low")
+			log.Println(candle.Low)
 
 			// processCandle(candle, symbol)
 		}
