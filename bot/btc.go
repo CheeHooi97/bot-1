@@ -1,7 +1,6 @@
-package main
+package bot
 
 import (
-	"bot-1/config"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -11,15 +10,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/adshao/go-binance/v2"
 	"github.com/gorilla/websocket"
 )
 
-func btc() {
-	client = binance.NewClient(config.BinanceApiKey, config.BinanceApiSecret)
+func BTC() {
+	// client := binance.NewClient(config.BinanceApiKey, config.BinanceApiSecret)
 
 	symbol := "btcusdt"
-	interval := "15m"
+	interval := "1m"
 
 	// Connect to Binance WebSocket for kline data
 	wsURL := fmt.Sprintf("wss://stream.binance.com:9443/ws/%s@kline_%s", symbol, interval)
