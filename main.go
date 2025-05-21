@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bot-1/config"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -48,13 +49,10 @@ var volumes []float64
 var client *binance.Client
 
 func main() {
-	// Load API keys from environment
-	apiKey := os.Getenv("BINANCE_API_KEY")
-	apiSecret := os.Getenv("BINANCE_API_SECRET")
-	if apiKey == "" || apiSecret == "" {
-		log.Fatal("Set BINANCE_API_KEY and BINANCE_API_SECRET environment variables")
-	}
-	client = binance.NewClient(apiKey, apiSecret)
+	// load config
+	config.LoadConfig()
+
+	client = binance.NewClient(config.BinanceApiKey, config.BinanceApiSecret)
 
 	symbol := "btcusdt"
 	interval := "15m"
@@ -105,13 +103,13 @@ func main() {
 				continue
 			}
 
-			candle, err := parseCandle(kline)
-			if err != nil {
-				log.Println("Error parsing candle:", err)
-				continue
-			}
+			// candle, err := parseCandle(kline)
+			// if err != nil {
+			// 	log.Println("Error parsing candle:", err)
+			// 	continue
+			// }
 
-			processCandle(candle, symbol)
+			// processCandle(candle, symbol)
 		}
 	}
 }
