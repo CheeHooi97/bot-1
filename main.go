@@ -3,7 +3,6 @@ package main
 import (
 	"bot-1/config"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -12,7 +11,6 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
-	"time"
 
 	"github.com/adshao/go-binance/v2"
 	"github.com/gorilla/websocket"
@@ -83,47 +81,48 @@ func main() {
 			log.Println("Received interrupt, shutting down...")
 			return
 		default:
-			_, message, err := c.ReadMessage()
-			if err != nil {
-				log.Println("Read error:", err)
-				time.Sleep(time.Second * 3)
-				continue
-			}
+			log.Println("Default")
+			// _, message, err := c.ReadMessage()
+			// if err != nil {
+			// 	log.Println("Read error:", err)
+			// 	time.Sleep(time.Second * 3)
+			// 	continue
+			// }
 
-			var msg map[string]interface{}
-			if err := json.Unmarshal(message, &msg); err != nil {
-				log.Println("JSON unmarshal error:", err)
-				continue
-			}
+			// var msg map[string]interface{}
+			// if err := json.Unmarshal(message, &msg); err != nil {
+			// 	log.Println("JSON unmarshal error:", err)
+			// 	continue
+			// }
 
-			kline, ok := msg["k"].(map[string]interface{})
-			if !ok {
-				continue
-			}
+			// kline, ok := msg["k"].(map[string]interface{})
+			// if !ok {
+			// 	continue
+			// }
 
-			isFinal := kline["x"].(bool)
-			if !isFinal {
-				// Only process closed candles
-				continue
-			}
+			// isFinal := kline["x"].(bool)
+			// if !isFinal {
+			// 	// Only process closed candles
+			// 	continue
+			// }
 
-			candle, err := parseCandle(kline)
-			if err != nil {
-				log.Println("Error parsing candle:", err)
-				continue
-			}
+			// candle, err := parseCandle(kline)
+			// if err != nil {
+			// 	log.Println("Error parsing candle:", err)
+			// 	continue
+			// }
 
-			log.Println("Open")
-			log.Println(candle.Open)
+			// log.Println("Open")
+			// log.Println(candle.Open)
 
-			log.Println("Close")
-			log.Println(candle.Close)
+			// log.Println("Close")
+			// log.Println(candle.Close)
 
-			log.Println("High")
-			log.Println(candle.High)
+			// log.Println("High")
+			// log.Println(candle.High)
 
-			log.Println("Low")
-			log.Println(candle.Low)
+			// log.Println("Low")
+			// log.Println(candle.Low)
 
 			// processCandle(candle, symbol)
 		}
