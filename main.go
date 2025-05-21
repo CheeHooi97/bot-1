@@ -103,11 +103,23 @@ func main() {
 				continue
 			}
 
-			// candle, err := parseCandle(kline)
-			// if err != nil {
-			// 	log.Println("Error parsing candle:", err)
-			// 	continue
-			// }
+			candle, err := parseCandle(kline)
+			if err != nil {
+				log.Println("Error parsing candle:", err)
+				continue
+			}
+
+			fmt.Println("Open")
+			fmt.Println(candle.Open)
+
+			fmt.Println("Close")
+			fmt.Println(candle.Close)
+
+			fmt.Println("High")
+			fmt.Println(candle.High)
+
+			fmt.Println("Low")
+			fmt.Println(candle.Low)
 
 			// processCandle(candle, symbol)
 		}
