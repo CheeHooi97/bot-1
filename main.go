@@ -6,14 +6,9 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"net/http"
-	"os"
-	"os/signal"
 	"strconv"
-	"syscall"
 
 	"github.com/adshao/go-binance/v2"
-	"github.com/gorilla/websocket"
 )
 
 // Candle represents a Binance kline/candle message
@@ -46,86 +41,107 @@ var volumes []float64
 // Binance client
 var client *binance.Client
 
+// func main() {
+// 	// load config
+// 	config.LoadConfig()
+
+// 	log.Println("Key:", config.BinanceApiKey)
+// 	log.Println("Secret:", config.BinanceApiSecret)
+
+// 	client = binance.NewClient(config.BinanceApiKey, config.BinanceApiSecret)
+
+// 	symbol := "btcusdt"
+// 	interval := "15m"
+
+// 	// Connect to Binance WebSocket for kline data
+// 	wsURL := fmt.Sprintf("wss://stream.binance.com:9443/ws/%s@kline_%s", symbol, interval)
+// 	log.Printf("Connecting to %s", wsURL)
+
+// 	c, _, err := websocket.DefaultDialer.Dial(wsURL, http.Header{})
+// 	if err != nil {
+// 		log.Fatal("WebSocket dial error:", err)
+// 	}
+// 	defer c.Close()
+
+// 	// Handle graceful shutdown
+// 	interrupt := make(chan os.Signal, 1)
+// 	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+// 	log.Println("test")
+// 	log.Println("Bot started. Waiting for live candle data...")
+
+// 	for {
+// 		select {
+// 		case <-interrupt:
+// 			log.Println("Received interrupt, shutting down...")
+// 			return
+// 		default:
+// 			_, message, err := c.ReadMessage()
+// 			if err != nil {
+// 				log.Println("Read error:", err)
+// 				time.Sleep(time.Second * 3)
+// 				continue
+// 			}
+
+// 			var msg map[string]interface{}
+// 			if err := json.Unmarshal(message, &msg); err != nil {
+// 				log.Println("JSON unmarshal error:", err)
+// 				continue
+// 			}
+
+// 			kline, ok := msg["k"].(map[string]interface{})
+// 			if !ok {
+// 				continue
+// 			}
+
+// 			isFinal := kline["x"].(bool)
+// 			if !isFinal {
+// 				// Only process closed candles
+// 				continue
+// 			}
+
+// 			candle, err := parseCandle(kline)
+// 			if err != nil {
+// 				log.Println("Error parsing candle:", err)
+// 				continue
+// 			}
+
+// 			log.Println("Open")
+// 			log.Println(candle.Open)
+
+// 			log.Println("Close")
+// 			log.Println(candle.Close)
+
+// 			log.Println("High")
+// 			log.Println(candle.High)
+
+// 			log.Println("Low")
+// 			log.Println(candle.Low)
+
+// 			// processCandle(candle, symbol)
+// 		}
+// 	}
+// }
+
 func main() {
-	// load config
 	config.LoadConfig()
 
-	log.Println("Key:", config.BinanceApiKey)
-	log.Println("Secret:", config.BinanceApiSecret)
+	// Load API keys from environment variables
+	apiKey := config.BinanceApiKey
+	apiSecret := config.BinanceApiSecret
 
-	client = binance.NewClient(config.BinanceApiKey, config.BinanceApiSecret)
+	// Create a Binance client
+	client := binance.NewClient(apiKey, apiSecret)
 
-	symbol := "btcusdt"
-	interval := "15m"
-
-	// Connect to Binance WebSocket for kline data
-	wsURL := fmt.Sprintf("wss://stream.binance.com:9443/ws/%s@kline_%s", symbol, interval)
-	log.Printf("Connecting to %s", wsURL)
-
-	c, _, err := websocket.DefaultDialer.Dial(wsURL, http.Header{})
+	// Get latest price for BTCUSDT
+	price, err := client.NewListPricesService().Symbol("BTCUSDT").Do(context.TODO())
 	if err != nil {
-		log.Fatal("WebSocket dial error:", err)
+		log.Fatal("Error fetching price:", err)
 	}
-	defer c.Close()
 
-	// Handle graceful shutdown
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
-
-	log.Println("test")
-	log.Println("Bot started. Waiting for live candle data...")
-
-	for {
-		select {
-		case <-interrupt:
-			log.Println("Received interrupt, shutting down...")
-			return
-		default:
-			log.Println("Default")
-			// _, message, err := c.ReadMessage()
-			// if err != nil {
-			// 	log.Println("Read error:", err)
-			// 	time.Sleep(time.Second * 3)
-			// 	continue
-			// }
-
-			// var msg map[string]interface{}
-			// if err := json.Unmarshal(message, &msg); err != nil {
-			// 	log.Println("JSON unmarshal error:", err)
-			// 	continue
-			// }
-
-			// kline, ok := msg["k"].(map[string]interface{})
-			// if !ok {
-			// 	continue
-			// }
-
-			// isFinal := kline["x"].(bool)
-			// if !isFinal {
-			// 	// Only process closed candles
-			// 	continue
-			// }
-
-			// candle, err := parseCandle(kline)
-			// if err != nil {
-			// 	log.Println("Error parsing candle:", err)
-			// 	continue
-			// }
-
-			// log.Println("Open")
-			// log.Println(candle.Open)
-
-			// log.Println("Close")
-			// log.Println(candle.Close)
-
-			// log.Println("High")
-			// log.Println(candle.High)
-
-			// log.Println("Low")
-			// log.Println(candle.Low)
-
-			// processCandle(candle, symbol)
-		}
+	// Print price info
+	for _, p := range price {
+		fmt.Printf("Symbol: %s, Price: %s\n", p.Symbol, p.Price)
 	}
 }
 
