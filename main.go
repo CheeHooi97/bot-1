@@ -14,6 +14,6 @@ func main() {
 	log.Println("Secret:", config.BinanceApiSecret)
 
 	bot.BTC()
-	// bot.ETH()
+	bot.ETH()
 	// select {}
 }

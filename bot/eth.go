@@ -17,7 +17,7 @@ func ETH() {
 	// client := binance.NewClient(config.BinanceApiKey, config.BinanceApiSecret)
 
 	symbol := "ethusdt"
-	interval := "1s"
+	interval := "15m"
 
 	// Connect to Binance WebSocket for kline data
 	wsURL := fmt.Sprintf("wss://stream.binance.com:9443/ws/%s@kline_%s", symbol, interval)
