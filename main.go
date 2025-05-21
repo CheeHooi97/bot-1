@@ -1,11 +1,13 @@
 package main
 
 import (
-	"bot-1/config"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
+	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/adshao/go-binance/v2"
@@ -123,25 +125,59 @@ var client *binance.Client
 // 	}
 // }
 
+// func main() {
+// 	config.LoadConfig()
+
+// 	// Load API keys from environment variables
+// 	apiKey := config.BinanceApiKey
+// 	apiSecret := config.BinanceApiSecret
+
+// 	// Create a Binance client
+// 	client := binance.NewClient(apiKey, apiSecret)
+
+// 	// Get latest price for BTCUSDT
+// 	price, err := client.NewListPricesService().Symbol("BTCUSDT").Do(context.TODO())
+// 	if err != nil {
+// 		log.Fatal("Error fetching price:", err)
+// 	}
+
+// 	// Print price info
+// 	for _, p := range price {
+// 		fmt.Printf("Symbol: %s, Price: %s\n", p.Symbol, p.Price)
+// 	}
+// }
+
 func main() {
-	config.LoadConfig()
+	baseURL := "https://fapi.binance.com"
+	endpoint := "/fapi/v1/klines"
 
-	// Load API keys from environment variables
-	apiKey := config.BinanceApiKey
-	apiSecret := config.BinanceApiSecret
+	params := url.Values{}
+	params.Set("symbol", "BTCUSDT")
+	params.Set("interval", "1m")
+	params.Set("limit", "5") // get last 5 candles
 
-	// Create a Binance client
-	client := binance.NewClient(apiKey, apiSecret)
+	fullURL := baseURL + endpoint + "?" + params.Encode()
 
-	// Get latest price for BTCUSDT
-	price, err := client.NewListPricesService().Symbol("BTCUSDT").Do(context.TODO())
+	resp, err := http.Get(fullURL)
 	if err != nil {
-		log.Fatal("Error fetching price:", err)
+		log.Fatal("Error making request:", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		log.Fatalf("Non-OK HTTP status: %d", resp.StatusCode)
 	}
 
-	// Print price info
-	for _, p := range price {
-		fmt.Printf("Symbol: %s, Price: %s\n", p.Symbol, p.Price)
+	var klines [][]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&klines)
+	if err != nil {
+		log.Fatal("Error decoding response:", err)
+	}
+
+	for _, k := range klines {
+		// k is an array of 12 elements representing the candle data:
+		// [OpenTime, Open, High, Low, Close, Volume, CloseTime, QuoteAssetVolume, NumberOfTrades, TakerBuyBaseVol, TakerBuyQuoteVol, Ignore]
+		fmt.Printf("Open time: %v, Open: %v, Close: %v\n", k[0], k[1], k[4])
 	}
 }
 
