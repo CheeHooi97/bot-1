@@ -113,19 +113,7 @@ func main() {
 				continue
 			}
 
-			log.Println("Open")
-			log.Println(candle.Open)
-
-			log.Println("Close")
-			log.Println(candle.Close)
-
-			log.Println("High")
-			log.Println(candle.High)
-
-			log.Println("Low")
-			log.Println(candle.Low)
-
-			// processCandle(candle, symbol)
+			processCandle(candle, symbol)
 		}
 	}
 }
