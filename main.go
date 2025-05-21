@@ -10,6 +10,7 @@ func main() {
 	// load config
 	config.LoadConfig()
 
+	log.Println("Test:")
 	log.Println("Key:", config.BinanceApiKey)
 	log.Println("Secret:", config.BinanceApiSecret)
 
