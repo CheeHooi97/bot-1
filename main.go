@@ -200,13 +200,12 @@ func processCandle(c Candle, symbol string) {
 	buySignal := rawBuy && canLong
 	sellSignal := rawSell && canShort
 
-	log.Printf("Candle Close: %.2f RSI: %.2f Volume: %.2f AvgVol: %.2f Buy: %v Sell: %v", c.Close, rsiVal, c.Volume, avgVolume, buySignal, sellSignal)
-
 	if buySignal && (state == 0 || state == -1) {
 		log.Println("BUY signal triggered")
 		// err := placeOrder(symbol, "BUY")
 		// if err == nil {
 		state = 1
+		log.Printf("Candle Close: %.2f RSI: %.2f Volume: %.2f AvgVol: %.2f Buy: %v Sell: %v", c.Close, rsiVal, c.Volume, avgVolume, buySignal, sellSignal)
 		log.Println("Entered LONG position")
 		// }
 	}
@@ -216,6 +215,7 @@ func processCandle(c Candle, symbol string) {
 		// err := placeOrder(symbol, "SELL")
 		// if err == nil {
 		state = -1
+		log.Printf("Candle Close: %.2f RSI: %.2f Volume: %.2f AvgVol: %.2f Buy: %v Sell: %v", c.Close, rsiVal, c.Volume, avgVolume, buySignal, sellSignal)
 		log.Println("Entered SHORT position")
 		// }
 	}
