@@ -23,11 +23,5 @@ func main() {
 	intervalInput, _ := reader.ReadString('\n')
 	interval := strings.TrimSpace(intervalInput)
 
-	bot.TestFuture(symbol)
-
-	go bot.StartBot(symbol, interval) // run symbol in a goroutine
-
-	// Keep the main function alive
-	fmt.Println("Bots started. Press Ctrl+C to stop.")
-	select {} // block forever
+	bot.Bot(symbol, interval)
 }
