@@ -23,7 +23,7 @@ func main() {
 	intervalInput, _ := reader.ReadString('\n')
 	interval := strings.TrimSpace(intervalInput)
 
-	Test(symbol)
+	TestFuture(symbol)
 
 	go bot.StartBot(symbol, interval) // run symbol in a goroutine
 
