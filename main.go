@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -23,5 +24,14 @@ func main() {
 	intervalInput, _ := reader.ReadString('\n')
 	interval := strings.TrimSpace(intervalInput)
 
-	bot.Bot(symbol, interval)
+	fmt.Print("Enter stop loss percentage (e.g., 1.5): ")
+	slInput, _ := reader.ReadString('\n')
+	slStr := strings.TrimSpace(slInput)
+	stopLossPercent, err := strconv.ParseFloat(slStr, 64)
+	if err != nil {
+		fmt.Println("Invalid stop loss input. Using default 1.5%.")
+		stopLossPercent = 1.5
+	}
+
+	bot.Bot(symbol, interval, stopLossPercent)
 }
