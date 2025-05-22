@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -29,37 +30,43 @@ type Candle struct {
 }
 
 var (
-	closes         []float64
-	volumes        []float64
-	rsiLength      = 14
-	volumeLookback = 20
-	bbLength       = 20
-	bbMult         = 2.0
-	tradeUSDT      = 100.0
-	balance        = 1000.0
-	positionSize   float64
-	entryPrice     float64
-	state          = 0 // 0 = neutral, 1 = long, -1 = short
-	client         *binance.Client
+	closes          []float64
+	volumes         []float64
+	rsiLength       = 14
+	volumeLookback  = 20
+	bbLength        = 20
+	bbMult          = 2.0
+	tradeUSDT       = 500.0
+	balance         = 10000.0
+	totalProfitLoss = 0.0
+	positionSize    float64
+	entryPrice      float64
+	state           = 0 // 0 = neutral, 1 = long, -1 = short
+	client          *binance.Client
+	stopLossPercent float64
 )
 
-func Bot(symbol, interval string) {
-	// Step 1: Fetch historical candles
-	history, err := fetchHistoricalCandles(symbol, interval, 200)
+// Bot runs the trading bot on given symbol, interval and stop loss percent
+func Bot(symbol, interval string, slPercent float64) {
+	stopLossPercent = slPercent
+	client = binance.NewClient("", "")
+
+	// Fetch historical candles
+	history, err := fetchHistoricalCandles(strings.ToUpper(symbol), interval)
 	if err != nil {
 		log.Fatal("Error fetching historical candles:", err)
 	}
 	for _, c := range history {
-		processCandle(c, symbol)
+		processCandle(c)
 	}
 
-	// Step 2: Start WebSocket
-	go startWebSocket(symbol, interval)
+	// Start WebSocket
+	go startWebSocket(strings.ToLower(symbol), interval)
 	waitForShutdown()
 }
 
-func fetchHistoricalCandles(symbol, interval string, limit int) ([]Candle, error) {
-	url := fmt.Sprintf("https://fapi.binance.com/fapi/v1/klines?symbol=%s&interval=%s&limit=%d", symbol, interval, limit)
+func fetchHistoricalCandles(symbol, interval string) ([]Candle, error) {
+	url := fmt.Sprintf("https://fapi.binance.com/fapi/v1/klines?symbol=%s&interval=%s", symbol, interval)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -100,6 +107,7 @@ func parseStringToFloat(s interface{}) float64 {
 
 func startWebSocket(symbol, interval string) {
 	url := fmt.Sprintf("wss://fstream.binance.com/ws/%s@kline_%s", symbol, interval)
+	log.Println("Connecting to ", url)
 	c, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		log.Fatal("WebSocket dial error:", err)
@@ -124,7 +132,7 @@ func startWebSocket(symbol, interval string) {
 			continue
 		}
 
-		if !kline["x"].(bool) {
+		if !kline["x"].(bool) { // only closed candles
 			continue
 		}
 
@@ -138,7 +146,7 @@ func startWebSocket(symbol, interval string) {
 			IsFinal:   true,
 		}
 
-		processCandle(candle, symbol)
+		processCandle(candle)
 	}
 }
 
@@ -150,19 +158,16 @@ func waitForShutdown() {
 }
 
 // processCandle runs the strategy logic on each closed candle
-func processCandle(c Candle, symbol string) {
-	// Append closes and volumes
+func processCandle(c Candle) {
 	closes = append(closes, c.Close)
 	volumes = append(volumes, c.Volume)
 
-	// Maintain max length for indicators
-	if len(closes) > 200 {
+	if len(closes) > 500 {
 		closes = closes[1:]
 		volumes = volumes[1:]
 	}
 
 	if len(closes) < rsiLength || len(volumes) < volumeLookback || len(closes) < bbLength {
-		// Not enough data yet
 		return
 	}
 
@@ -171,21 +176,18 @@ func processCandle(c Candle, symbol string) {
 	highVolume := c.Volume > avgVolume*1.5
 	extremeHighVolume := c.Volume > avgVolume*2
 
-	// Candle color
 	greenCandle := c.Close > c.Open
 	redCandle := c.Close < c.Open
 
-	// Wick calculations
 	highLowDiff := c.High - c.Low
 	if highLowDiff == 0 {
-		return // avoid division by zero
+		return
 	}
 	topWick := c.High - math.Max(c.Open, c.Close)
 	bottomWick := math.Min(c.Open, c.Close) - c.Low
 	topWickPerc := (topWick / highLowDiff) * 100
 	bottomWickPerc := (bottomWick / highLowDiff) * 100
 
-	// Bollinger Bands
 	basis := sma(closes[len(closes)-bbLength:], bbLength)
 	stdDev := stddev(closes[len(closes)-bbLength:], basis)
 	upper := basis + bbMult*stdDev
@@ -194,131 +196,144 @@ func processCandle(c Candle, symbol string) {
 	rawBuy := (rsiVal < 35 && highVolume && (greenCandle || (redCandle && bottomWickPerc > 60))) || (extremeHighVolume && c.Close <= lower)
 	rawSell := (rsiVal > 65 && highVolume && (redCandle || (greenCandle && topWickPerc > 60))) || (extremeHighVolume && c.Close >= upper)
 
-	canLong := true  // Assuming both long and short allowed
-	canShort := true // Adjust as needed
+	buySignal := rawBuy
+	sellSignal := rawSell
 
-	buySignal := rawBuy && canLong
-	sellSignal := rawSell && canShort
+	// === STOP LOSS CHECK ===
+	if state == 1 && c.Close <= entryPrice*(1-stopLossPercent/100) {
+		profit := (c.Close - entryPrice) * positionSize
+		balance += tradeUSDT + profit
+		log.Printf("STOP LOSS triggered (LONG): Sold %.4f BTC at %.2f, loss: %.2f USDT, balance: %.2f USDT", positionSize, c.Close, profit, balance)
+		state = 0
+		positionSize = 0
+		entryPrice = 0
+		totalProfitLoss += profit
+		log.Println("Total profit/loss :", totalProfitLoss)
+		return
+	}
+	if state == -1 && c.Close >= entryPrice*(1+stopLossPercent/100) {
+		closeAmount := math.Abs(positionSize)
+		profit := (entryPrice - c.Close) * closeAmount
+		balance += tradeUSDT + profit
+		log.Printf("STOP LOSS triggered (SHORT): Bought %.4f BTC at %.2f, loss: %.2f USDT, balance: %.2f USDT", closeAmount, c.Close, profit, balance)
+		state = 0
+		positionSize = 0
+		entryPrice = 0
+		totalProfitLoss += profit
+		log.Println("Total profit/loss :", totalProfitLoss)
+		return
+	}
 
-	// === ONLY LOG ON POSITION CHANGE, NOT EVERY CANDLE ===
-
-	// Closing SHORT position and opening LONG
-	if buySignal && (state == 0 || state == -1) {
-		if state == -1 {
-			// Closing short position first: buy BTC to cover short
+	// === TRADING LOGIC ===
+	if state == 0 {
+		// Neutral: open position on any signal
+		if buySignal {
+			if balance >= tradeUSDT {
+				size := tradeUSDT / c.Close
+				positionSize = size
+				entryPrice = c.Close
+				balance -= tradeUSDT
+				state = 1
+				log.Printf("Opened LONG position: bought %.4f BTC at %.2f, stop loss at %.2f, balance: %.2f", size, c.Close, c.Close*(1-stopLossPercent/100), balance)
+			} else {
+				log.Println("Insufficient balance to open LONG position")
+			}
+			return
+		}
+		if sellSignal {
+			if balance >= tradeUSDT {
+				size := tradeUSDT / c.Close
+				positionSize = -size
+				entryPrice = c.Close
+				balance -= tradeUSDT
+				state = -1
+				log.Printf("Opened SHORT position: sold %.4f BTC at %.2f, stop loss at %.2f, balance: %.2f", size, c.Close, c.Close*(1+stopLossPercent/100), balance)
+			} else {
+				log.Println("Insufficient balance to open SHORT position")
+			}
+			return
+		}
+	} else if state == 1 {
+		// Long position: close only on sell signal
+		if sellSignal {
+			profit := (c.Close - entryPrice) * positionSize
+			balance += tradeUSDT + profit
+			log.Printf("Closed LONG position: sold %.4f BTC at %.2f, profit: %.2f USDT, balance: %.2f USDT", positionSize, c.Close, profit, balance)
+			state = 0
+			positionSize = 0
+			entryPrice = 0
+			totalProfitLoss += profit
+			log.Println("Total profit/loss :", totalProfitLoss)
+			return
+		}
+	} else if state == -1 {
+		// Short position: close only on buy signal
+		if buySignal {
 			closeAmount := math.Abs(positionSize)
 			profit := (entryPrice - c.Close) * closeAmount
 			balance += tradeUSDT + profit
-			log.Printf("Closing SHORT position: bought %.4f BTC at %.2f, profit: %.2f USDT, balance: %.2f USDT", closeAmount, c.Close, profit, balance)
+			log.Printf("Closed SHORT position: bought %.4f BTC at %.2f, profit: %.2f USDT, balance: %.2f USDT", closeAmount, c.Close, profit, balance)
+			state = 0
 			positionSize = 0
 			entryPrice = 0
-			state = 0
+			totalProfitLoss += profit
+			log.Println("Total profit/loss :", totalProfitLoss)
+			return
 		}
-		if balance >= tradeUSDT {
-			// Open long position
-			size := tradeUSDT / c.Close
-			positionSize = size
-			entryPrice = c.Close
-			balance -= tradeUSDT
-			state = 1
-			log.Printf("Opened LONG position: bought %.4f BTC at %.2f, spent %.2f USDT, remaining balance %.2f USDT", size, c.Close, tradeUSDT, balance)
-		} else {
-			log.Println("Insufficient balance to open LONG position")
-		}
-		return
 	}
-
-	// Closing LONG position and opening SHORT
-	if sellSignal && (state == 0 || state == 1) {
-		if state == 1 {
-			// Closing long position first: sell BTC
-			profit := (c.Close - entryPrice) * positionSize
-			balance += tradeUSDT + profit // Return initial tradeUSDT + profit
-			log.Printf("Closing LONG position: sold %.4f BTC at %.2f, profit: %.2f USDT, balance: %.2f USDT", positionSize, c.Close, profit, balance)
-			positionSize = 0
-			entryPrice = 0
-			state = 0
-		}
-		if balance >= tradeUSDT {
-			// Open short position
-			size := tradeUSDT / c.Close
-			positionSize = -size
-			entryPrice = c.Close
-			balance -= tradeUSDT
-			state = -1
-			log.Printf("Opened SHORT position: sold short %.4f BTC at %.2f, used %.2f USDT margin, remaining balance %.2f USDT", size, c.Close, tradeUSDT, balance)
-		} else {
-			log.Println("Insufficient balance to open SHORT position")
-		}
-		return
-	}
-
-	// If holding a position (long or short), no logs to avoid flooding logs every candle
 }
 
-// placeOrder submits a market order to Binance (currently unused)
-func placeOrder(symbol, side string) error {
-	sideType := binance.SideTypeBuy
-	if side == "SELL" {
-		sideType = binance.SideTypeSell
-	}
-
-	order, err := client.NewCreateOrderService().
+func placeOrder(symbol string, side binance.SideType, quantity float64) {
+	// Example place order function (not used here)
+	resp, err := client.NewCreateOrderService().
 		Symbol(symbol).
-		Side(sideType).
+		Side(side).
 		Type(binance.OrderTypeMarket).
-		Quantity("0.001"). // example qty, adjust as needed
+		Quantity(fmt.Sprintf("%.4f", quantity)).
 		Do(context.Background())
 	if err != nil {
-		log.Println("Order failed:", err)
-		return err
+		log.Println("Order error:", err)
+		return
 	}
-
-	log.Printf("%s order placed: %+v\n", side, order)
-	return nil
+	log.Println("Order placed:", resp)
 }
 
-// RSI calculation
-func calcRSI(data []float64, length int) float64 {
-	if len(data) < length+1 {
-		return 50.0 // neutral
+func calcRSI(closes []float64, length int) float64 {
+	if len(closes) < length+1 {
+		return 0
 	}
-	var gainSum, lossSum float64
-
-	for i := len(data) - length; i < len(data); i++ {
-		diff := data[i] - data[i-1]
-		if diff > 0 {
-			gainSum += diff
+	var gains, losses float64
+	for i := len(closes) - length; i < len(closes); i++ {
+		change := closes[i] - closes[i-1]
+		if change > 0 {
+			gains += change
 		} else {
-			lossSum -= diff
+			losses -= change
 		}
 	}
-	if lossSum == 0 {
+	if losses == 0 {
 		return 100
 	}
-	rs := gainSum / lossSum
+	rs := gains / losses
 	rsi := 100 - (100 / (1 + rs))
 	return rsi
 }
 
-// Simple moving average
 func sma(data []float64, length int) float64 {
 	if len(data) < length {
 		return 0
 	}
 	sum := 0.0
-	for i := len(data) - length; i < len(data); i++ {
-		sum += data[i]
+	for _, v := range data[len(data)-length:] {
+		sum += v
 	}
 	return sum / float64(length)
 }
 
-// Standard deviation
 func stddev(data []float64, mean float64) float64 {
-	variance := 0.0
+	var sum float64
 	for _, v := range data {
-		diff := v - mean
-		variance += diff * diff
+		sum += (v - mean) * (v - mean)
 	}
-	return math.Sqrt(variance / float64(len(data)))
+	return math.Sqrt(sum / float64(len(data)))
 }
