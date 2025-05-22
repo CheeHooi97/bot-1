@@ -13,7 +13,7 @@ type OrderBook struct {
 	Asks         [][]string `json:"asks"`
 }
 
-func Test(symbol string) {
+func TestFuture(symbol string) {
 	url := fmt.Sprintf("https://fapi.binance.com/fapi/v1/depth?symbol=%s", symbol)
 
 	resp, err := http.Get(url)
