@@ -19,124 +19,134 @@ import (
 
 // Candle represents a Binance kline/candle message
 type Candle struct {
-	OpenTime  int64
 	Open      float64
 	High      float64
 	Low       float64
 	Close     float64
 	Volume    float64
-	CloseTime int64
-	// other fields ignored
+	CloseTime time.Time
+	IsFinal   bool
 }
 
-// Strategy parameters
-const (
+var (
+	closes         []float64
+	volumes        []float64
 	rsiLength      = 14
-	volumeLookback = 10
+	volumeLookback = 20
 	bbLength       = 20
 	bbMult         = 2.0
-	tradeUSDT      = 500.0 // USDT per trade
+	tradeUSDT      = 100.0
+	balance        = 1000.0
+	positionSize   float64
+	entryPrice     float64
+	state          = 0 // 0 = neutral, 1 = long, -1 = short
+	client         *binance.Client
 )
 
-// State to track positions: 0=flat, 1=long, -1=short
-var state = 0
+func Bot(symbol, interval string) {
+	// Step 1: Fetch historical candles
+	history, err := fetchHistoricalCandles(symbol, interval, 200)
+	if err != nil {
+		log.Fatal("Error fetching historical candles:", err)
+	}
+	for _, c := range history {
+		processCandle(c, symbol)
+	}
 
-// Store closes and volumes for indicators
-var closes []float64
-var volumes []float64
+	// Step 2: Start WebSocket
+	go startWebSocket(symbol, interval)
+	waitForShutdown()
+}
 
-// Binance client
-var client *binance.Client
+func fetchHistoricalCandles(symbol, interval string, limit int) ([]Candle, error) {
+	url := fmt.Sprintf("https://fapi.binance.com/fapi/v1/klines?symbol=%s&interval=%s&limit=%d", symbol, interval, limit)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
 
-// Trading simulation variables
-var balance = 10000.0 // Starting balance in USDT
-var positionSize = 0.0
-var entryPrice = 0.0
+	var data [][]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
 
-func StartBot(symbol string, interval string) {
-	wsURL := fmt.Sprintf("wss://stream.binance.com:9443/ws/%s@kline_%s", symbol, interval)
-	log.Printf("Connecting to %s", wsURL)
+	var candles []Candle
+	for _, item := range data {
+		open := parseStringToFloat(item[1])
+		high := parseStringToFloat(item[2])
+		low := parseStringToFloat(item[3])
+		close := parseStringToFloat(item[4])
+		volume := parseStringToFloat(item[5])
+		closeTime := time.UnixMilli(int64(item[6].(float64)))
 
-	c, _, err := websocket.DefaultDialer.Dial(wsURL, http.Header{})
+		candles = append(candles, Candle{
+			Open:      open,
+			High:      high,
+			Low:       low,
+			Close:     close,
+			Volume:    volume,
+			CloseTime: closeTime,
+			IsFinal:   true,
+		})
+	}
+	return candles, nil
+}
+
+func parseStringToFloat(s interface{}) float64 {
+	val, _ := strconv.ParseFloat(s.(string), 64)
+	return val
+}
+
+func startWebSocket(symbol, interval string) {
+	url := fmt.Sprintf("wss://fstream.binance.com/ws/%s@kline_%s", symbol, interval)
+	c, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		log.Fatal("WebSocket dial error:", err)
 	}
 	defer c.Close()
 
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
-
-	log.Println("Bot started. Waiting for live candle data...")
-
 	for {
-		select {
-		case <-interrupt:
-			log.Println("Received interrupt, shutting down...")
-			return
-		default:
-			_, message, err := c.ReadMessage()
-			if err != nil {
-				log.Println("Read error:", err)
-				time.Sleep(time.Second * 3)
-				continue
-			}
-
-			var msg map[string]interface{}
-			if err := json.Unmarshal(message, &msg); err != nil {
-				log.Println("JSON unmarshal error:", err)
-				continue
-			}
-
-			kline, ok := msg["k"].(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			isFinal := kline["x"].(bool)
-			if !isFinal {
-				continue
-			}
-
-			candle, err := parseCandle(kline)
-			if err != nil {
-				log.Println("Error parsing candle:", err)
-				continue
-			}
-
-			processCandle(candle, symbol)
+		_, message, err := c.ReadMessage()
+		if err != nil {
+			log.Println("Read error:", err)
+			time.Sleep(3 * time.Second)
+			continue
 		}
+
+		var raw map[string]interface{}
+		if err := json.Unmarshal(message, &raw); err != nil {
+			continue
+		}
+
+		kline, ok := raw["k"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		if !kline["x"].(bool) {
+			continue
+		}
+
+		candle := Candle{
+			Open:      parseStringToFloat(kline["o"]),
+			High:      parseStringToFloat(kline["h"]),
+			Low:       parseStringToFloat(kline["l"]),
+			Close:     parseStringToFloat(kline["c"]),
+			Volume:    parseStringToFloat(kline["v"]),
+			CloseTime: time.UnixMilli(int64(kline["T"].(float64))),
+			IsFinal:   true,
+		}
+
+		processCandle(candle, symbol)
 	}
 }
 
-// parseCandle extracts candle info from Binance kline JSON
-func parseCandle(k map[string]interface{}) (Candle, error) {
-	var c Candle
-	var err error
-
-	c.OpenTime = int64(k["t"].(float64))
-	c.Open, err = strconv.ParseFloat(k["o"].(string), 64)
-	if err != nil {
-		return c, err
-	}
-	c.High, err = strconv.ParseFloat(k["h"].(string), 64)
-	if err != nil {
-		return c, err
-	}
-	c.Low, err = strconv.ParseFloat(k["l"].(string), 64)
-	if err != nil {
-		return c, err
-	}
-	c.Close, err = strconv.ParseFloat(k["c"].(string), 64)
-	if err != nil {
-		return c, err
-	}
-	c.Volume, err = strconv.ParseFloat(k["v"].(string), 64)
-	if err != nil {
-		return c, err
-	}
-	c.CloseTime = int64(k["T"].(float64))
-
-	return c, nil
+func waitForShutdown() {
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
+	<-interrupt
+	log.Println("Shutting down.")
 }
 
 // processCandle runs the strategy logic on each closed candle
