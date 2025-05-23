@@ -10,6 +10,8 @@ import (
 var (
 	BinanceApiKey    string
 	BinanceApiSecret string
+	TelegramToken    string
+	TelegramChatId   string
 )
 
 // LoadConfig
@@ -18,6 +20,8 @@ func LoadConfig() {
 
 	BinanceApiKey = GetEnv("BINANCE_API_KEY")
 	BinanceApiSecret = GetEnv("BINANCE_API_SECRET")
+	TelegramToken = GetEnv("TELEGRAM_TOKEN")
+	TelegramChatId = GetEnv("TELEGRAM_CHAT_ID")
 }
 
 func GetEnv(key string) string {
