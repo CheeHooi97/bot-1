@@ -34,30 +34,26 @@ func main() {
 	}
 
 	var token string
-	var chatId string
 
-	if interval == "1m" {
-		token = config.TelegramTokenBTC1m
-		chatId = config.TelegramChatId
-	} else if interval == "5m" {
+	if symbol == "btcusdt" {
+		if interval == "1m" {
+			token = config.TelegramTokenBTC1m
+		} else if interval == "5m" {
+			token = config.TelegramToken
+		} else if interval == "15m" {
+			token = config.TelegramToken
+		} else if interval == "30m" {
+			token = config.TelegramToken
+		} else if interval == "1h" {
+			token = config.TelegramToken
+		} else if interval == "4h" {
+			token = config.TelegramToken
+		} else if interval == "1d" {
+			token = config.TelegramToken
+		}
+	} else {
 		token = config.TelegramToken
-		chatId = config.TelegramChatId
-	} else if interval == "15m" {
-		token = config.TelegramToken
-		chatId = config.TelegramChatId
-	} else if interval == "30m" {
-		token = config.TelegramToken
-		chatId = config.TelegramChatId
-	} else if interval == "1h" {
-		token = config.TelegramToken
-		chatId = config.TelegramChatId
-	} else if interval == "4h" {
-		token = config.TelegramToken
-		chatId = config.TelegramChatId
-	} else if interval == "1d" {
-		token = config.TelegramToken
-		chatId = config.TelegramChatId
 	}
 
-	bot.Bot(symbol, interval, token, chatId, stopLossPercent)
+	bot.Bot(symbol, interval, token, stopLossPercent)
 }
