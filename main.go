@@ -43,15 +43,20 @@ func main() {
 		token = config.TelegramToken
 		chatId = config.TelegramChatId
 	} else if interval == "15m" {
-
+		token = config.TelegramToken
+		chatId = config.TelegramChatId
 	} else if interval == "30m" {
-
+		token = config.TelegramToken
+		chatId = config.TelegramChatId
 	} else if interval == "1h" {
-
+		token = config.TelegramToken
+		chatId = config.TelegramChatId
 	} else if interval == "4h" {
-
+		token = config.TelegramToken
+		chatId = config.TelegramChatId
 	} else if interval == "1d" {
-
+		token = config.TelegramToken
+		chatId = config.TelegramChatId
 	}
 
 	bot.Bot(symbol, interval, token, chatId, stopLossPercent)
