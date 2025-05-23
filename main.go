@@ -33,5 +33,26 @@ func main() {
 		stopLossPercent = 1.5
 	}
 
-	bot.Bot(symbol, interval, stopLossPercent)
+	var token string
+	var chatId string
+
+	if interval == "1m" {
+		token = config.TelegramTokenBTC1m
+		chatId = config.TelegramChatId
+	} else if interval == "5m" {
+		token = config.TelegramToken
+		chatId = config.TelegramChatId
+	} else if interval == "15m" {
+
+	} else if interval == "30m" {
+
+	} else if interval == "1h" {
+
+	} else if interval == "4h" {
+
+	} else if interval == "1d" {
+
+	}
+
+	bot.Bot(symbol, interval, token, chatId, stopLossPercent)
 }

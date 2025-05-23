@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"bot-1/config"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,10 +8,10 @@ import (
 	"strings"
 )
 
-func sendTelegramMessage(message string) {
-	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", config.TelegramToken)
+func sendTelegramMessage(token, chatId, message string) {
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", token)
 	data := url.Values{}
-	data.Set("chat_id", config.TelegramChatId)
+	data.Set("chat_id", chatId)
 	data.Set("text", message)
 
 	resp, err := http.Post(
