@@ -57,7 +57,14 @@ func Bot(symbol, interval, token string, slPercent float64) {
 		log.Fatal("Error fetching historical candles:", err)
 	}
 	for _, c := range history {
-		processCandle(c, symbol, token)
+		closes = append(closes, c.Close)
+		volumes = append(volumes, c.Volume)
+	}
+
+	// Keep buffer size trimmed
+	if len(closes) > 500 {
+		closes = closes[len(closes)-500:]
+		volumes = volumes[len(volumes)-500:]
 	}
 
 	// Start WebSocket
