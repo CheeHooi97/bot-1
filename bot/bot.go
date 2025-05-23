@@ -47,7 +47,7 @@ var (
 )
 
 // Bot runs the trading bot on given symbol, interval and stop loss percent
-func Bot(symbol, interval string, slPercent float64) {
+func Bot(symbol, interval, token, chatId string, slPercent float64) {
 	stopLossPercent = slPercent
 	client = binance.NewClient("", "")
 
@@ -57,11 +57,11 @@ func Bot(symbol, interval string, slPercent float64) {
 		log.Fatal("Error fetching historical candles:", err)
 	}
 	for _, c := range history {
-		processCandle(c, symbol)
+		processCandle(c, symbol, token, chatId)
 	}
 
 	// Start WebSocket
-	go startWebSocket(strings.ToLower(symbol), interval)
+	go startWebSocket(strings.ToLower(symbol), interval, token, chatId)
 	waitForShutdown()
 }
 
@@ -105,7 +105,7 @@ func parseStringToFloat(s interface{}) float64 {
 	return val
 }
 
-func startWebSocket(symbol, interval string) {
+func startWebSocket(symbol, interval, token, chatId string) {
 	url := fmt.Sprintf("wss://fstream.binance.com/ws/%s@kline_%s", symbol, interval)
 	log.Println("Connecting to ", url)
 	c, _, err := websocket.DefaultDialer.Dial(url, nil)
@@ -146,7 +146,7 @@ func startWebSocket(symbol, interval string) {
 			IsFinal:   true,
 		}
 
-		processCandle(candle, symbol)
+		processCandle(candle, symbol, token, chatId)
 	}
 }
 
@@ -158,7 +158,7 @@ func waitForShutdown() {
 }
 
 // processCandle runs the strategy logic on each closed candle
-func processCandle(c Candle, symbol string) {
+func processCandle(c Candle, symbol, token, chatId string) {
 	closes = append(closes, c.Close)
 	volumes = append(volumes, c.Volume)
 
@@ -203,31 +203,32 @@ func processCandle(c Candle, symbol string) {
 	if state == 1 && c.Close <= entryPrice*(1-stopLossPercent/100) {
 		profit := (c.Close - entryPrice) * positionSize
 		balance += tradeUSDT + profit
-		a := fmt.Sprintf("STOP LOSS triggered (LONG): Sold %.4f %s at %.2f, loss: %.2f USDT, balance: %.2f USDT", positionSize, symbol, c.Close, profit, balance)
+		a := fmt.Sprintf("STOP LOSS [LONG]\nAmount: %.4f %s\nPrice: %.2f\nLoss: %.2f USDT\nBalance: %.2f USDT", positionSize, symbol, c.Close, profit, balance)
 		log.Println(a)
-		sendTelegramMessage(a)
+		sendTelegramMessage(token, chatId, a)
 		state = 0
 		positionSize = 0
 		entryPrice = 0
 		totalProfitLoss += profit
 		b := fmt.Sprintln("Total profit/loss :", totalProfitLoss)
 		log.Println(b)
-		sendTelegramMessage(b)
+		sendTelegramMessage(token, chatId, b)
 		return
 	}
 	if state == -1 && c.Close >= entryPrice*(1+stopLossPercent/100) {
 		closeAmount := math.Abs(positionSize)
 		profit := (entryPrice - c.Close) * closeAmount
 		balance += tradeUSDT + profit
-		a := fmt.Sprintf("STOP LOSS triggered (SHORT): Bought %.4f %s at %.2f, loss: %.2f USDT, balance: %.2f USDT", closeAmount, symbol, c.Close, profit, balance)
+		a := fmt.Sprintf("STOP LOSS [SHORT]\nAmount: %.4f %s\nPrice: %.2f\nLoss: %.2f USDT\nBalance: %.2f USDT", closeAmount, symbol, c.Close, profit, balance)
 		log.Println(a)
+		sendTelegramMessage(token, chatId, a)
 		state = 0
 		positionSize = 0
 		entryPrice = 0
 		totalProfitLoss += profit
 		b := fmt.Sprintln("Total profit/loss :", totalProfitLoss)
 		log.Println(b)
-		sendTelegramMessage(b)
+		sendTelegramMessage(token, chatId, b)
 		return
 	}
 
@@ -241,13 +242,13 @@ func processCandle(c Candle, symbol string) {
 				entryPrice = c.Close
 				balance -= tradeUSDT
 				state = 1
-				a := fmt.Sprintf("Opened LONG position: bought %.4f %s at %.2f, stop loss at %.2f, balance: %.2f", size, symbol, c.Close, c.Close*(1-stopLossPercent/100), balance)
+				a := fmt.Sprintf("[LONG]\nAmount: %.4f %s\nPrice: %.2f\nStop loss: %.2f\nBalance: %.2f", size, symbol, c.Close, c.Close*(1-stopLossPercent/100), balance)
 				log.Println(a)
-				sendTelegramMessage(a)
+				sendTelegramMessage(token, chatId, a)
 			} else {
 				a := "Insufficient balance to open LONG position"
 				log.Println(a)
-				sendTelegramMessage(a)
+				sendTelegramMessage(token, chatId, a)
 			}
 			return
 		}
@@ -258,13 +259,13 @@ func processCandle(c Candle, symbol string) {
 				entryPrice = c.Close
 				balance -= tradeUSDT
 				state = -1
-				a := fmt.Sprintf("Opened SHORT position: sold %.4f %s at %.2f, stop loss at %.2f, balance: %.2f", size, symbol, c.Close, c.Close*(1+stopLossPercent/100), balance)
+				a := fmt.Sprintf("[SHORT]\nAmount: %.4f %s\nPrice: %.2f\nStop loss: %.2f\nBalance: %.2f", size, symbol, c.Close, c.Close*(1+stopLossPercent/100), balance)
 				log.Println(a)
-				sendTelegramMessage(a)
+				sendTelegramMessage(token, chatId, a)
 			} else {
 				a := "Insufficient balance to open SHORT position"
 				log.Println(a)
-				sendTelegramMessage(a)
+				sendTelegramMessage(token, chatId, a)
 			}
 			return
 		}
@@ -273,16 +274,16 @@ func processCandle(c Candle, symbol string) {
 		if sellSignal {
 			profit := (c.Close - entryPrice) * positionSize
 			balance += tradeUSDT + profit
-			a := fmt.Sprintf("Closed LONG position: sold %.4f %s at %.2f, profit: %.2f USDT, balance: %.2f USDT", positionSize, symbol, c.Close, profit, balance)
+			a := fmt.Sprintf("Closed [LONG]\nAmount: %.4f %s\nPrice: %.2f\nProfit: %.2f USDT\nBalance: %.2f USDT", positionSize, symbol, c.Close, profit, balance)
 			log.Println(a)
-			sendTelegramMessage(a)
+			sendTelegramMessage(token, chatId, a)
 			state = 0
 			positionSize = 0
 			entryPrice = 0
 			totalProfitLoss += profit
 			b := fmt.Sprintln("Total profit/loss :", totalProfitLoss)
 			log.Println(b)
-			sendTelegramMessage(b)
+			sendTelegramMessage(token, chatId, b)
 			return
 		}
 	} else if state == -1 {
@@ -291,16 +292,16 @@ func processCandle(c Candle, symbol string) {
 			closeAmount := math.Abs(positionSize)
 			profit := (entryPrice - c.Close) * closeAmount
 			balance += tradeUSDT + profit
-			a := fmt.Sprintf("Closed SHORT position: bought %.4f %s at %.2f, profit: %.2f USDT, balance: %.2f USDT", closeAmount, symbol, c.Close, profit, balance)
+			a := fmt.Sprintf("Closed [SHORT]\nAmount: %.4f %s\nPrice: %.2f\nProfit: %.2f USDT\nBalance: %.2f USDT", closeAmount, symbol, c.Close, profit, balance)
 			log.Println(a)
-			sendTelegramMessage(a)
+			sendTelegramMessage(token, chatId, a)
 			state = 0
 			positionSize = 0
 			entryPrice = 0
 			totalProfitLoss += profit
 			b := fmt.Sprintln("Total profit/loss :", totalProfitLoss)
 			log.Println(b)
-			sendTelegramMessage(b)
+			sendTelegramMessage(token, chatId, b)
 			return
 		}
 	}
