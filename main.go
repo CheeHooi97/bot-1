@@ -68,7 +68,7 @@ func main() {
 			token = config.TelegramToken
 		}
 	} else {
-		token = config.TelegramToken
+		token = config.TelegramTestToken2
 	}
 
 	bot.Bot(symbol, interval, token, stopLossPercent)
