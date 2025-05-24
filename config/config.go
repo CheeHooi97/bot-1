@@ -22,6 +22,7 @@ var (
 	TelegramTokenETH4h  string
 	TelegramChatId      string
 	TelegramTestToken   string
+	TelegramTestToken2  string
 )
 
 // LoadConfig
@@ -42,6 +43,7 @@ func LoadConfig() {
 	TelegramTokenETH4h = GetEnv("TELEGRAM_TOKEN_ETH_4h")
 	TelegramChatId = GetEnv("TELEGRAM_CHAT_ID")
 	TelegramTestToken = GetEnv("TELEGRAM_TEST_TOKEN")
+	TelegramTestToken2 = GetEnv("TELEGRAM_TEST_TOKEN2")
 
 }
 
