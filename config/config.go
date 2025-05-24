@@ -8,11 +8,11 @@ import (
 )
 
 var (
-	BinanceApiKey       string
-	BinanceApiSecret    string
-	TelegramToken       string
-	TelegramTokenBTC1m  string
-	TelegramTokenBTC5m  string
+	BinanceApiKey      string
+	BinanceApiSecret   string
+	TelegramToken      string
+	TelegramTokenBTC1m string
+	// TelegramTokenBTC5m  string
 	TelegramTokenBTC15m string
 	// TelegramTokenBTC30m string
 	TelegramTokenBTC1h string
@@ -31,7 +31,7 @@ func LoadConfig() {
 	BinanceApiSecret = GetEnv("BINANCE_API_SECRET")
 	TelegramToken = GetEnv("TELEGRAM_TOKEN")
 	TelegramTokenBTC1m = GetEnv("TELEGRAM_TOKEN_BTC_1m")
-	TelegramTokenBTC5m = GetEnv("TELEGRAM_TOKEN_BTC_5m")
+	// TelegramTokenBTC5m = GetEnv("TELEGRAM_TOKEN_BTC_5m")
 	TelegramTokenBTC15m = GetEnv("TELEGRAM_TOKEN_BTC_15m")
 	// TelegramTokenBTC30m = GetEnv("TELEGRAM_TOKEN_BTC_30m")
 	TelegramTokenBTC1h = GetEnv("TELEGRAM_TOKEN_BTC_1h")
