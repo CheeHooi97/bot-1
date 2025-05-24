@@ -1,12 +1,18 @@
 package bot
 
 import (
-	"context"
+	"bot-1/config"
+	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -180,6 +186,13 @@ func processCandle(c Candle, symbol, token string) {
 		return
 	}
 
+	var step float64
+	if symbol == "btcusdt" {
+		step = 0.001
+	} else if symbol == "ethusdt" {
+		step = 0.01
+	}
+
 	rsiVal := calcRSI(closes, rsiLength)
 	avgVolume := sma(volumes, volumeLookback)
 	highVolume := c.Volume > avgVolume*1.5
@@ -212,6 +225,7 @@ func processCandle(c Candle, symbol, token string) {
 	if state == 1 && c.Close <= entryPrice*(1-stopLossPercent/100) {
 		profit := (c.Close - entryPrice) * positionSize
 		balance += tradeUSDT + profit
+		// placeOrder(symbol, "SELL", positionSize)
 		a := fmt.Sprintf("STOP LOSS [LONG]\nAmount: %.4f %s\nPrice: %.2f\nLoss: %.2f USDT\nBalance: %.2f USDT", positionSize, s, c.Close, profit, balance)
 		log.Println(a)
 		sendTelegramMessage(token, a)
@@ -228,6 +242,7 @@ func processCandle(c Candle, symbol, token string) {
 		closeAmount := math.Abs(positionSize)
 		profit := (entryPrice - c.Close) * closeAmount
 		balance += tradeUSDT + profit
+		// placeOrder(symbol, "BUY", positionSize)
 		a := fmt.Sprintf("STOP LOSS [SHORT]\nAmount: %.4f %s\nPrice: %.2f\nLoss: %.2f USDT\nBalance: %.2f USDT", closeAmount, s, c.Close, profit, balance)
 		log.Println(a)
 		sendTelegramMessage(token, a)
@@ -246,11 +261,12 @@ func processCandle(c Candle, symbol, token string) {
 		// Neutral: open position on any signal
 		if buySignal {
 			if balance >= tradeUSDT {
-				size := tradeUSDT / c.Close
+				size := roundUpToStep(tradeUSDT/c.Close, step)
 				positionSize = size
 				entryPrice = c.Close
 				balance -= tradeUSDT
 				state = 1
+				// placeOrder(symbol, "BUY", positionSize)
 				a := fmt.Sprintf("[LONG]\nAmount: %.4f %s\nPrice: %.2f\nStop loss: %.2f\nBalance: %.2f", size, s, c.Close, c.Close*(1-stopLossPercent/100), balance)
 				log.Println(a)
 				sendTelegramMessage(token, a)
@@ -263,11 +279,12 @@ func processCandle(c Candle, symbol, token string) {
 		}
 		if sellSignal {
 			if balance >= tradeUSDT {
-				size := tradeUSDT / c.Close
+				size := roundUpToStep(tradeUSDT/c.Close, step)
 				positionSize = -size
 				entryPrice = c.Close
 				balance -= tradeUSDT
 				state = -1
+				// placeOrder(symbol, "SELL", positionSize)
 				a := fmt.Sprintf("[SHORT]\nAmount: %.4f %s\nPrice: %.2f\nStop loss: %.2f\nBalance: %.2f", size, s, c.Close, c.Close*(1+stopLossPercent/100), balance)
 				log.Println(a)
 				sendTelegramMessage(token, a)
@@ -283,6 +300,7 @@ func processCandle(c Candle, symbol, token string) {
 		if sellSignal {
 			profit := (c.Close - entryPrice) * positionSize
 			balance += tradeUSDT + profit
+			// placeOrder(symbol, "SELL", positionSize)
 			a := fmt.Sprintf("Closed [LONG]\nAmount: %.4f %s\nPrice: %.2f\nProfit: %.2f USDT\nBalance: %.2f USDT", positionSize, s, c.Close, profit, balance)
 			log.Println(a)
 			sendTelegramMessage(token, a)
@@ -301,6 +319,7 @@ func processCandle(c Candle, symbol, token string) {
 			closeAmount := math.Abs(positionSize)
 			profit := (entryPrice - c.Close) * closeAmount
 			balance += tradeUSDT + profit
+			// placeOrder(symbol, "BUY", positionSize)
 			a := fmt.Sprintf("Closed [SHORT]\nAmount: %.4f %s\nPrice: %.2f\nProfit: %.2f USDT\nBalance: %.2f USDT", closeAmount, s, c.Close, profit, balance)
 			log.Println(a)
 			sendTelegramMessage(token, a)
@@ -316,19 +335,51 @@ func processCandle(c Candle, symbol, token string) {
 	}
 }
 
-func placeOrder(symbol string, side binance.SideType, quantity float64) {
-	// Example place order function (not used here)
-	resp, err := client.NewCreateOrderService().
-		Symbol(symbol).
-		Side(side).
-		Type(binance.OrderTypeMarket).
-		Quantity(fmt.Sprintf("%.4f", quantity)).
-		Do(context.Background())
+func placeOrder(symbol string, side string, quantity float64) {
+	endpoint := "https://fapi.binance.com/fapi/v1/order"
+	timestamp := time.Now().UnixMilli()
+
+	// Convert quantity to string with 4 decimals
+	qtyStr := strconv.FormatFloat(quantity, 'f', 4, 64)
+
+	params := url.Values{}
+	params.Set("symbol", symbol)
+	params.Set("side", side) // "BUY" or "SELL"
+	params.Set("type", "MARKET")
+	params.Set("quantity", qtyStr)
+	params.Set("timestamp", strconv.FormatInt(timestamp, 10))
+
+	// Sign the query
+	queryString := params.Encode()
+	signature := sign(queryString, config.BinanceApiSecret)
+	params.Set("signature", signature)
+
+	req, err := http.NewRequest("POST", endpoint, bytes.NewBufferString(params.Encode()))
 	if err != nil {
-		log.Println("Order error:", err)
+		log.Println("Error creating order request:", err)
 		return
 	}
-	log.Println("Order placed:", resp)
+
+	req.Header.Set("X-MBX-APIKEY", config.BinanceApiKey)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("Error placing order:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	log.Println("Order response:", string(body))
+}
+
+// sign generates HMAC-SHA256 signature
+func sign(data, secret string) string {
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(data))
+	return hex.EncodeToString(mac.Sum(nil))
 }
 
 func calcRSI(closes []float64, length int) float64 {
@@ -369,4 +420,8 @@ func stddev(data []float64, mean float64) float64 {
 		sum += (v - mean) * (v - mean)
 	}
 	return math.Sqrt(sum / float64(len(data)))
+}
+
+func roundUpToStep(value, step float64) float64 {
+	return math.Ceil(value/step) * step
 }
