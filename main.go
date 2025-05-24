@@ -55,7 +55,7 @@ func main() {
 		if interval == "1m" {
 			token = config.TelegramToken
 		} else if interval == "5m" {
-			token = config.TelegramToken
+			token = config.TelegramTestToken
 		} else if interval == "15m" {
 			token = config.TelegramTokenETH15m
 		} else if interval == "30m" {
