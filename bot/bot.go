@@ -187,10 +187,15 @@ func processCandle(c Candle, symbol, token string) {
 	}
 
 	var step float64
-	if symbol == "btcusdt" {
+	switch symbol {
+	case "btcusdt":
 		step = 0.001
-	} else if symbol == "ethusdt" {
+	case "ethusdt":
 		step = 0.01
+	case "adausdt":
+		step = 0.1 // suitable for coins priced below $1
+	default:
+		step = 0.01 // fallback
 	}
 
 	rsiVal := calcRSI(closes, rsiLength)
