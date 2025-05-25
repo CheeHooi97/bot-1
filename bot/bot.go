@@ -217,11 +217,14 @@ func processCandle(c Candle, symbol, token string) {
 	upper := basis + bbMult*stdDev
 	lower := basis - bbMult*stdDev
 
-	rawBuy := (rsiVal < 35 && highVolume && (greenCandle || (redCandle && bottomWickPerc > 60))) || (extremeHighVolume && c.Close <= lower)
-	rawSell := (rsiVal > 65 && highVolume && (redCandle || (greenCandle && topWickPerc > 60))) || (extremeHighVolume && c.Close >= upper)
+	rawBuy := (rsiVal < 35 && highVolume && (greenCandle || (redCandle && bottomWickPerc > 60))) || (extremeHighVolume)
+	rawSell := (rsiVal > 65 && highVolume && (redCandle || (greenCandle && topWickPerc > 60))) || (extremeHighVolume)
 
-	buySignal := rawBuy
-	sellSignal := rawSell
+	combinedBuy := rawBuy && c.Close <= lower
+	combinedSell := rawSell && c.Close >= upper
+
+	buySignal := combinedBuy
+	sellSignal := combinedSell
 
 	// === STOP LOSS CHECK ===
 	if state == 1 && c.Close <= entryPrice*(1-stopLossPercent/100) {
