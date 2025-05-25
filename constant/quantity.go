@@ -2,8 +2,10 @@ package constant
 
 var SymbolPrecisionMap = map[string][]int{
 	"btcusdt": {2, 4}, // pricePrecision = 2, amountPrecision = 4
-	"ethusdt": {2, 4},
+	"ethusdt": {2, 2},
 	"adausdt": {4, 2},
+	"bnbusdt": {2, 2},
+	"solusdt": {2, 2},
 }
 
 var StepMap = map[string]float64{
