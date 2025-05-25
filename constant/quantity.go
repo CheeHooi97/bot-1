@@ -1,7 +1,7 @@
 package constant
 
-var QuantityMap = map[string]string{
-	"btcusdt": "0.001",
-	"ethusdt": "0.05",
-	"solusdt": "0.5",
+var SymbolPrecisionMap = map[string][]int{
+	"btcusdt": {2, 4}, // pricePrecision = 2, amountPrecision = 4
+	"ethusdt": {2, 4},
+	"adausdt": {4, 2},
 }
