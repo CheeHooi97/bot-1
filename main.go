@@ -39,7 +39,7 @@ func main() {
 		if interval == "1m" {
 			token = config.TelegramTokenBTC1m
 		} else if interval == "5m" {
-			token = config.TelegramToken
+			token = config.TelegramTokenBTC5m
 		} else if interval == "15m" {
 			token = config.TelegramTokenBTC15m
 		} else if interval == "30m" {
@@ -53,17 +53,33 @@ func main() {
 		}
 	} else if symbol == "ethusdt" {
 		if interval == "1m" {
-			token = config.TelegramToken
+			token = config.TelegramTokenETH1m
 		} else if interval == "5m" {
-			token = config.TelegramTestToken
+			token = config.TelegramTokenETH5m
 		} else if interval == "15m" {
 			token = config.TelegramTokenETH15m
 		} else if interval == "30m" {
 			token = config.TelegramToken
 		} else if interval == "1h" {
-			token = config.TelegramToken
+			token = config.TelegramTokenETH1h
 		} else if interval == "4h" {
 			token = config.TelegramTokenETH4h
+		} else if interval == "1d" {
+			token = config.TelegramToken
+		}
+	} else if symbol == "solusdt" {
+		if interval == "1m" {
+			token = config.TelegramTokenSOL1m
+		} else if interval == "5m" {
+			token = config.TelegramTestToken
+		} else if interval == "15m" {
+			token = config.TelegramTestToken
+		} else if interval == "30m" {
+			token = config.TelegramToken
+		} else if interval == "1h" {
+			token = config.TelegramTestToken
+		} else if interval == "4h" {
+			token = config.TelegramTestToken
 		} else if interval == "1d" {
 			token = config.TelegramToken
 		}
