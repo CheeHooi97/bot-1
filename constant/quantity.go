@@ -5,3 +5,11 @@ var SymbolPrecisionMap = map[string][]int{
 	"ethusdt": {2, 4},
 	"adausdt": {4, 2},
 }
+
+var StepMap = map[string]float64{
+	"btcusdt": 0.001,
+	"ethusdt": 0.01,
+	"adausdt": 0.1,
+	"bnbusdt": 0.1,
+	"solusdt": 0.1,
+}
