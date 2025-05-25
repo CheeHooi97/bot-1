@@ -187,17 +187,7 @@ func processCandle(c Candle, symbol, token string) {
 		return
 	}
 
-	var step float64
-	switch symbol {
-	case "btcusdt":
-		step = 0.001
-	case "ethusdt":
-		step = 0.01
-	case "adausdt":
-		step = 0.1 // suitable for coins priced below $1
-	default:
-		step = 0.01 // fallback
-	}
+	step := constant.StepMap[symbol]
 
 	pricePrecision := constant.SymbolPrecisionMap[symbol][0]
 	amountPrecision := constant.SymbolPrecisionMap[symbol][1]
