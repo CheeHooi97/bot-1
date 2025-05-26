@@ -6,7 +6,6 @@ import (
 	"bot-1/constant"
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -35,9 +34,9 @@ func main() {
 		stopLossPercent = 1.5
 	}
 
-	token := constant.TokenMap[symbol].(map[string]string)[interval]
+	tokenMap := constant.GetTokenMap()
 
-	log.Println(token)
+	token := tokenMap[symbol].(map[string]string)[interval]
 
 	bot.Bot(symbol, interval, token, stopLossPercent)
 }
