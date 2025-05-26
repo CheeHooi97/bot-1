@@ -226,15 +226,6 @@ func processCandle(c Candle, symbol, token string) {
 	buySignal := combinedBuy
 	sellSignal := combinedSell
 
-	// Test Print
-	if symbol == "bnbusdt" {
-		sendTelegramMessage(token, "BNB")
-	}
-
-	if symbol == "xrpusdt" {
-		sendTelegramMessage(token, "XRP")
-	}
-
 	// === STOP LOSS CHECK ===
 	if state == 1 && c.Close <= entryPrice*(1-stopLossPercent/100) {
 		profit := (c.Close - entryPrice) * positionSize
