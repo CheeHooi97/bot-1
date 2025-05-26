@@ -227,6 +227,10 @@ func processCandle(c Candle, symbol, token string) {
 	sellSignal := combinedSell
 
 	// Test Print
+	if symbol == "bnbusdt" {
+		sendTelegramMessage(token, "BNB")
+	}
+
 	if symbol == "xrpusdt" {
 		sendTelegramMessage(token, "XRP")
 	}
