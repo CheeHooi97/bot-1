@@ -6,6 +6,7 @@ var SymbolPrecisionMap = map[string][]int{
 	"adausdt": {4, 2},
 	"bnbusdt": {2, 2},
 	"solusdt": {2, 2},
+	"xrpusdt": {2, 2},
 }
 
 var StepMap = map[string]float64{
@@ -14,4 +15,5 @@ var StepMap = map[string]float64{
 	"adausdt": 0.1,
 	"bnbusdt": 0.1,
 	"solusdt": 0.1,
+	"xrpusdt": 0.1,
 }
