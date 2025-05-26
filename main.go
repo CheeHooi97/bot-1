@@ -3,6 +3,7 @@ package main
 import (
 	"bot-1/bot"
 	"bot-1/config"
+	"bot-1/constant"
 	"bufio"
 	"fmt"
 	"os"
@@ -33,59 +34,7 @@ func main() {
 		stopLossPercent = 1.5
 	}
 
-	var token string
-
-	if symbol == "btcusdt" {
-		if interval == "1m" {
-			token = config.TelegramTokenBTC1m
-		} else if interval == "5m" {
-			token = config.TelegramTokenBTC5m
-		} else if interval == "15m" {
-			token = config.TelegramTokenBTC15m
-		} else if interval == "30m" {
-			token = config.TelegramToken
-		} else if interval == "1h" {
-			token = config.TelegramTokenBTC1h
-		} else if interval == "4h" {
-			token = config.TelegramTokenBTC4h
-		} else if interval == "1d" {
-			token = config.TelegramToken
-		}
-	} else if symbol == "ethusdt" {
-		if interval == "1m" {
-			token = config.TelegramTokenETH1m
-		} else if interval == "5m" {
-			token = config.TelegramTokenETH5m
-		} else if interval == "15m" {
-			token = config.TelegramTokenETH15m
-		} else if interval == "30m" {
-			token = config.TelegramToken
-		} else if interval == "1h" {
-			token = config.TelegramTokenETH1h
-		} else if interval == "4h" {
-			token = config.TelegramTokenETH4h
-		} else if interval == "1d" {
-			token = config.TelegramToken
-		}
-	} else if symbol == "solusdt" {
-		if interval == "1m" {
-			token = config.TelegramTokenSOL1m
-		} else if interval == "5m" {
-			token = config.TelegramTestToken
-		} else if interval == "15m" {
-			token = config.TelegramTestToken
-		} else if interval == "30m" {
-			token = config.TelegramToken
-		} else if interval == "1h" {
-			token = config.TelegramTestToken
-		} else if interval == "4h" {
-			token = config.TelegramTestToken
-		} else if interval == "1d" {
-			token = config.TelegramToken
-		}
-	} else {
-		token = config.TelegramTestToken2
-	}
+	token := constant.TokenMap[symbol].(map[string]string)[interval]
 
 	bot.Bot(symbol, interval, token, stopLossPercent)
 }
