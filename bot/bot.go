@@ -226,13 +226,18 @@ func processCandle(c Candle, symbol, token string) {
 	buySignal := combinedBuy
 	sellSignal := combinedSell
 
+	// Test Print
+	if symbol == "xrpusdt" {
+		sendTelegramMessage(token, "XRP")
+	}
+
 	// === STOP LOSS CHECK ===
 	if state == 1 && c.Close <= entryPrice*(1-stopLossPercent/100) {
 		profit := (c.Close - entryPrice) * positionSize
 		percentChange := ((c.Close - entryPrice) / entryPrice) * 100
 		balance += tradeUSDT + profit
 		// placeOrder(symbol, "SELL", positionSize)
-		a := fmt.Sprintf("STOP LOSS [LONG]\nAmount: "+amount+"%s"+"\nPrice: "+price+"\nPercent changed: %.2f\nLoss: %.2f USDT\nBalance: %.2f USDT", positionSize, s, c.Close, percentChange, profit, balance)
+		a := fmt.Sprintf("STOP LOSS [LONG]\nAmount: "+amount+"%s"+"\nPrice: "+price+"\nPercent changed: %.2f\nLoss: %.2f USDT\nBalance: %.2f USDT\n", positionSize, s, c.Close, percentChange, profit, balance)
 		log.Println(a)
 		sendTelegramMessage(token, a)
 		state = 0
@@ -250,7 +255,7 @@ func processCandle(c Candle, symbol, token string) {
 		percentChange := ((c.Close - entryPrice) / entryPrice) * 100
 		balance += tradeUSDT + profit
 		// placeOrder(symbol, "BUY", positionSize)
-		a := fmt.Sprintf("STOP LOSS [SHORT]\nAmount: "+amount+"%s"+"\nPrice: "+price+"\nPercent changed: %.2f\nLoss: %.2f USDT\nBalance: %.2f USDT", closeAmount, s, c.Close, percentChange, profit, balance)
+		a := fmt.Sprintf("STOP LOSS [SHORT]\nAmount: "+amount+"%s"+"\nPrice: "+price+"\nPercent changed: %.2f\nLoss: %.2f USDT\nBalance: %.2f USDT\n", closeAmount, s, c.Close, percentChange, profit, balance)
 		log.Println(a)
 		sendTelegramMessage(token, a)
 		state = 0
@@ -309,7 +314,7 @@ func processCandle(c Candle, symbol, token string) {
 			percentChange := ((c.Close - entryPrice) / entryPrice) * 100
 			balance += tradeUSDT + profit
 			// placeOrder(symbol, "SELL", positionSize)
-			a := fmt.Sprintf("Closed [LONG]\nAmount: "+amount+"%s"+"\nPrice: "+price+"\nPercent changed: %.2f\nProfit: %.2f USDT\nBalance: %.2f USDT", positionSize, s, c.Close, percentChange, profit, balance)
+			a := fmt.Sprintf("Closed [LONG]\nAmount: "+amount+"%s"+"\nPrice: "+price+"\nPercent changed: %.2f\nProfit: %.2f USDT\nBalance: %.2f USDT\n", positionSize, s, c.Close, percentChange, profit, balance)
 			log.Println(a)
 			sendTelegramMessage(token, a)
 			state = 0
@@ -329,7 +334,7 @@ func processCandle(c Candle, symbol, token string) {
 			percentChange := ((c.Close - entryPrice) / entryPrice) * 100
 			balance += tradeUSDT + profit
 			// placeOrder(symbol, "BUY", positionSize)
-			a := fmt.Sprintf("Closed [SHORT]\nAmount: "+amount+"%s"+"\nPrice: "+price+"\nPercent changed: %.2f\nProfit: %.2f USDT\nBalance: %.2f USDT", closeAmount, s, c.Close, percentChange, profit, balance)
+			a := fmt.Sprintf("Closed [SHORT]\nAmount: "+amount+"%s"+"\nPrice: "+price+"\nPercent changed: %.2f\nProfit: %.2f USDT\nBalance: %.2f USDT\n", closeAmount, s, c.Close, percentChange, profit, balance)
 			log.Println(a)
 			sendTelegramMessage(token, a)
 			state = 0
