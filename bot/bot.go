@@ -87,7 +87,7 @@ func fetchHistoricalCandles(symbol, interval string) ([]Candle, error) {
 	}
 	defer resp.Body.Close()
 
-	var data [][]interface{}
+	var data [][]any
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func fetchHistoricalCandles(symbol, interval string) ([]Candle, error) {
 	return candles, nil
 }
 
-func parseStringToFloat(s interface{}) float64 {
+func parseStringToFloat(s any) float64 {
 	val, _ := strconv.ParseFloat(s.(string), 64)
 	return val
 }
@@ -136,12 +136,12 @@ func startWebSocket(symbol, interval, token string) {
 			continue
 		}
 
-		var raw map[string]interface{}
+		var raw map[string]any
 		if err := json.Unmarshal(message, &raw); err != nil {
 			continue
 		}
 
-		kline, ok := raw["k"].(map[string]interface{})
+		kline, ok := raw["k"].(map[string]any)
 		if !ok {
 			continue
 		}
@@ -235,9 +235,7 @@ func processCandle(c Candle, symbol, token string) {
 		a := fmt.Sprintf("STOP LOSS [LONG]\nAmount: "+amount+"%s"+"\nPrice: "+price+"\nPercent changed: %.2f\nLoss: %.2f USDT\nBalance: %.2f USDT\n", positionSize, s, c.Close, percentChange, profit, balance)
 		log.Println(a)
 		sendTelegramMessage(token, a)
-		state = 0
-		positionSize = 0
-		entryPrice = 0
+		state, positionSize, entryPrice = 0, 0, 0
 		totalProfitLoss += profit
 		b := fmt.Sprintf("Total profit/loss : %.2f", totalProfitLoss)
 		log.Println(b)
@@ -253,9 +251,7 @@ func processCandle(c Candle, symbol, token string) {
 		a := fmt.Sprintf("STOP LOSS [SHORT]\nAmount: "+amount+"%s"+"\nPrice: "+price+"\nPercent changed: %.2f\nLoss: %.2f USDT\nBalance: %.2f USDT\n", closeAmount, s, c.Close, percentChange, profit, balance)
 		log.Println(a)
 		sendTelegramMessage(token, a)
-		state = 0
-		positionSize = 0
-		entryPrice = 0
+		state, positionSize, entryPrice = 0, 0, 0
 		totalProfitLoss += profit
 		b := fmt.Sprintf("Total profit/loss : %.2f", totalProfitLoss)
 		log.Println(b)
@@ -312,9 +308,7 @@ func processCandle(c Candle, symbol, token string) {
 			a := fmt.Sprintf("Closed [LONG]\nAmount: "+amount+"%s"+"\nPrice: "+price+"\nPercent changed: %.2f\nProfit: %.2f USDT\nBalance: %.2f USDT\n", positionSize, s, c.Close, percentChange, profit, balance)
 			log.Println(a)
 			sendTelegramMessage(token, a)
-			state = 0
-			positionSize = 0
-			entryPrice = 0
+			state, positionSize, entryPrice = 0, 0, 0
 			totalProfitLoss += profit
 			b := fmt.Sprintf("Total profit/loss : %.2f", totalProfitLoss)
 			log.Println(b)
@@ -332,9 +326,7 @@ func processCandle(c Candle, symbol, token string) {
 			a := fmt.Sprintf("Closed [SHORT]\nAmount: "+amount+"%s"+"\nPrice: "+price+"\nPercent changed: %.2f\nProfit: %.2f USDT\nBalance: %.2f USDT\n", closeAmount, s, c.Close, percentChange, profit, balance)
 			log.Println(a)
 			sendTelegramMessage(token, a)
-			state = 0
-			positionSize = 0
-			entryPrice = 0
+			state, positionSize, entryPrice = 0, 0, 0
 			totalProfitLoss += profit
 			b := fmt.Sprintf("Total profit/loss : %.2f", totalProfitLoss)
 			log.Println(b)

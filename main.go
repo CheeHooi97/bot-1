@@ -17,15 +17,15 @@ func main() {
 
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Printf("Enter trading pair (e.g., btcusdt): ")
+	fmt.Printf("Enter trading pair (e.g. btcusdt): ")
 	symbolInput, _ := reader.ReadString('\n')
 	symbol := strings.TrimSpace(symbolInput)
 
-	fmt.Printf("Enter interval for %s (e.g., 1m, 5m, 15m, 1h): ", symbol)
+	fmt.Printf("Enter interval for %s (e.g. 1m, 5m, 15m, 1h): ", symbol)
 	intervalInput, _ := reader.ReadString('\n')
 	interval := strings.TrimSpace(intervalInput)
 
-	fmt.Print("Enter stop loss percentage (e.g., 1.5): ")
+	fmt.Print("Enter stop loss percentage (e.g. 1.5): ")
 	slInput, _ := reader.ReadString('\n')
 	slStr := strings.TrimSpace(slInput)
 	stopLossPercent, err := strconv.ParseFloat(slStr, 64)

@@ -25,7 +25,7 @@ func GetTokenMap() map[string]any {
 		"solusdt": map[string]string{
 			"1m": config.TelegramTokenSOL1m,
 			// "5m":  config.TelegramTokenSOL5m,
-			// "15m": config.TelegramTokenSOL15m,
+			"15m": config.TelegramTokenSOL15m,
 			// "30m": config.TelegramTokenSOL30m,
 			// "1h":  config.TelegramTokenSOL1h,
 			// "4h":  config.TelegramTokenSOL4h,
@@ -34,7 +34,7 @@ func GetTokenMap() map[string]any {
 		"bnbusdt": map[string]string{
 			"1m": config.TelegramTokenBNB1m,
 			// "5m":  config.TelegramTokenBNB5m,
-			// "15m": config.TelegramTokenBNB15m,
+			"15m": config.TelegramTokenBNB15m,
 			// "30m": config.TelegramTokenBNB30m,
 			// "1h":  config.TelegramTokenBNB1h,
 			// "4h": config.TelegramTokenBNB4h,
@@ -43,7 +43,7 @@ func GetTokenMap() map[string]any {
 		"adausdt": map[string]string{
 			"1m": config.TelegramTokenADA1m,
 			// "5m":   config.TelegramTokenADA5m,
-			// "15m": config.TelegramTokenADA15m,
+			"15m": config.TelegramTokenADA15m,
 			// "30m": config.TelegramTokenADA30m,
 			// "1h":  config.TelegramTokenADA1h,
 			// "4h": config.TelegramTokenADA4h,
@@ -52,7 +52,7 @@ func GetTokenMap() map[string]any {
 		"xrpusdt": map[string]string{
 			"1m": config.TelegramTokenXRP1m,
 			// "5m":   config.TelegramTokenXRP5m,
-			// "15m": config.TelegramTokenXRP15m,
+			"15m": config.TelegramTokenXRP15m,
 			// "30m":  config.TelegramTokenXRP30m,
 			// "1h":  config.TelegramTokenXRP1h,
 			// "4h":config.TelegramTokenXRP4h,
