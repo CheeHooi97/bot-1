@@ -38,11 +38,11 @@ func main() {
 
 	var token string
 	token = tokenMap[symbol].(map[string]string)[interval]
-	if tokenMap[symbol] == "btcusdt" && tokenMap[symbol].(map[string]string)[interval] == "4h" {
+	if symbol == "btcusdt" && interval == "4h" {
 		token = config.TelegramTokenBTC4h
 		interval = "1m"
 	}
-	if tokenMap[symbol] == "ethusdt" && tokenMap[symbol].(map[string]string)[interval] == "4h" {
+	if symbol == "ethusdt" && interval == "4h" {
 		token = config.TelegramTokenETH4h
 		interval = "1m"
 	}
