@@ -42,7 +42,7 @@ func main() {
 		token = config.TelegramTokenBTC4h
 		interval = "1m"
 	}
-	if symbol == "ethusdt" && interval == "4h" {
+	if symbol == "adausdt" && interval == "4h" {
 		token = config.TelegramTokenETH4h
 		interval = "1m"
 	}
