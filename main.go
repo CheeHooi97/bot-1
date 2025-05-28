@@ -41,8 +41,10 @@ func main() {
 	if tokenMap[symbol].(map[string]string)[interval] == "4h" {
 		if tokenMap[symbol] == "btcusdt" {
 			token = config.TelegramTokenBTC4h
+			interval = "1m"
 		} else if tokenMap[symbol] == "ethusdt" {
 			token = config.TelegramTokenETH4h
+			interval = "1m"
 		}
 	}
 
