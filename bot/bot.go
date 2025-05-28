@@ -157,7 +157,22 @@ func startWebSocket(symbol, interval, token string) {
 			IsFinal:   true,
 		}
 
-		processCandle(candle, symbol, token)
+		spikeUpPerc := ((candle.High - candle.Open) / candle.Open * 100)
+		spikeDownPerc := ((candle.Low - candle.Open) / candle.Open * 100)
+
+		a := constant.PercentageMap[interval]
+
+		if spikeUpPerc >= a {
+			msg := fmt.Sprintln("⚠️ Sudden PUMP detected!\nSymbol: %s\nHigh: %.4f\nOpen: %.4f\nChange: +%.2f%%", symbol, candle.High, candle.Open, spikeUpPerc)
+			sendTelegramMessage(token, msg)
+		}
+
+		if spikeDownPerc <= -a {
+			msg := fmt.Sprintln("⚠️ Sudden DUMP detected!\nSymbol: %s\nLow: %.4f\nOpen: %.4f\nChange: %.2f%%", symbol, candle.Low, candle.Open, spikeDownPerc)
+			sendTelegramMessage(token, msg)
+		}
+
+		processCandle(candle, symbol, token, interval)
 	}
 }
 
@@ -169,7 +184,7 @@ func waitForShutdown() {
 }
 
 // processCandle runs the strategy logic on each closed candle
-func processCandle(c Candle, symbol, token string) {
+func processCandle(c Candle, symbol, token, interval string) {
 	s := strings.ToUpper(symbol[:len(symbol)-4])
 
 	closes = append(closes, c.Close)
@@ -214,8 +229,18 @@ func processCandle(c Candle, symbol, token string) {
 	upper := basis + bbMult*stdDev
 	lower := basis - bbMult*stdDev
 
-	rawBuy := (rsiVal < 35 && highVolume && (greenCandle || (redCandle && bottomWickPerc > 60))) || (extremeHighVolume)
-	rawSell := (rsiVal > 65 && highVolume && (redCandle || (greenCandle && topWickPerc > 60))) || (extremeHighVolume)
+	// sudden spike up/down
+	spikeUpPerc := ((c.High - c.Open) / c.Open * 100)
+	spikeDownPerc := ((c.Low - c.Open) / c.Open * 100)
+	percent := constant.PercentageMap[interval]
+
+	// long needle and close as red candle with volumex2
+	wickSpikeUp := spikeUpPerc >= percent && redCandle && extremeHighVolume
+	// long needle and close as green candle with volumex2
+	wickSpikeDown := spikeDownPerc <= percent && greenCandle && extremeHighVolume
+
+	rawBuy := (rsiVal < 35 && highVolume && (greenCandle || (redCandle && bottomWickPerc > 60))) || wickSpikeDown
+	rawSell := (rsiVal > 65 && highVolume && (redCandle || (greenCandle && topWickPerc > 60))) || wickSpikeUp
 
 	combinedBuy := rawBuy && c.Close <= lower
 	combinedSell := rawSell && c.Close >= upper
