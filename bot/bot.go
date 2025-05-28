@@ -9,7 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math"
 	"net/http"
@@ -21,7 +21,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/adshao/go-binance/v2"
 	"github.com/gorilla/websocket"
 )
 
@@ -49,14 +48,12 @@ var (
 	positionSize    float64
 	entryPrice      float64
 	state           = 0 // 0 = neutral, 1 = long, -1 = short
-	client          *binance.Client
 	stopLossPercent float64
 )
 
 // Bot runs the trading bot on given symbol, interval and stop loss percent
 func Bot(symbol, interval, token string, slPercent float64) {
 	stopLossPercent = slPercent
-	client = binance.NewClient("", "")
 
 	// Fetch historical candles
 	history, err := fetchHistoricalCandles(strings.ToUpper(symbol), interval)
@@ -372,7 +369,7 @@ func placeOrder(symbol string, side string, quantity float64) {
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	log.Println("Order response:", string(body))
 }
 
