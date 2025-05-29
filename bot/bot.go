@@ -212,28 +212,6 @@ func processCandle(c Candle, symbol, token, interval string) {
 		return
 	}
 
-	candles = append(candles, c)
-	if len(candles) < trendTracker.Window {
-		return
-	}
-
-	index := len(candles) - 1
-	trendTracker.updatePrevHigh(candles, index)
-
-	log.Printf("PrevHigh: %.2f at index %d\n", trendTracker.PrevHigh, trendTracker.PrevHighIndex)
-
-	if index-trendTracker.PrevHighIndex > trendTracker.MinDropCandles {
-		if c.Close < candles[trendTracker.PrevHighIndex].Low {
-			trendTracker.TrendBrokenAt = index
-			trendTracker.DropCount++
-			log.Printf("Trend broken at %d", index)
-		}
-	}
-
-	if index >= 1 && index+1 < len(candles) {
-		trendTracker.updateSwingLows(candles, index-1)
-	}
-
 	step := constant.StepMap[symbol]
 
 	pricePrecision := constant.SymbolPrecisionMap[symbol][0]
