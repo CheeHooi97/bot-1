@@ -58,5 +58,11 @@ func GetTokenMap() map[string]any {
 			// "4h":config.TelegramTokenXRP4h,
 			// "1d": config.TelegramTokenXRP1d,
 		},
+		"hypeusdt": map[string]string{
+			"1m": config.TelegramTokenETH4h,
+		},
+		"dogeusdt": map[string]string{
+			"1m": config.TelegramTokenBTC4h,
+		},
 	}
 }

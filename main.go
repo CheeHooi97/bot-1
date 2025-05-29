@@ -38,14 +38,6 @@ func main() {
 
 	var token string
 	token = tokenMap[symbol].(map[string]string)[interval]
-	if symbol == "btcusdt" && interval == "4h" {
-		token = config.TelegramTokenBTC4h
-		interval = "1m"
-	}
-	if symbol == "adausdt" && interval == "4h" {
-		token = config.TelegramTokenETH4h
-		interval = "1m"
-	}
 
 	bot.Bot(symbol, interval, token, stopLossPercent)
 }
