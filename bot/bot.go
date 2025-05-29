@@ -35,16 +35,6 @@ type Candle struct {
 	IsFinal   bool
 }
 
-type TrendTracker struct {
-	Lows           []int   // Indexes of detected swing lows
-	PrevHigh       float64 // Last significant high
-	PrevHighIndex  int     // Index of that high
-	TrendBrokenAt  int     // Index where trendline was broken
-	DropCount      int     // How many candles have dropped after break
-	MinDropCandles int     // Threshold to confirm trend reversal
-	Window         int     // Lookback window for swing low
-}
-
 var (
 	closes          []float64
 	volumes         []float64
@@ -195,9 +185,6 @@ func waitForShutdown() {
 	log.Println("Shutting down.")
 }
 
-var candles []Candle // global or within bot
-var trendTracker TrendTracker
-
 // processCandle runs the strategy logic on each closed candle
 func processCandle(c Candle, symbol, token, interval string) {
 	s := strings.ToUpper(symbol[:len(symbol)-4])
@@ -288,10 +275,8 @@ func processCandle(c Candle, symbol, token, interval string) {
 		log.Println(b)
 		sendTelegramMessage(token, b)
 		numOfLose += 1
-		c := fmt.Sprintf("Number of win: %d", numOfWin)
+		c := fmt.Sprintf("Win: %d | Lose: %d", numOfWin, numOfLose)
 		sendTelegramMessage(token, c)
-		d := fmt.Sprintf("Number of lose: %d", numOfLose)
-		sendTelegramMessage(token, d)
 		return
 	}
 	if state == -1 && c.Close >= entryPrice*(1+stopLossPercent/100) {
@@ -309,10 +294,8 @@ func processCandle(c Candle, symbol, token, interval string) {
 		log.Println(b)
 		sendTelegramMessage(token, b)
 		numOfLose += 1
-		c := fmt.Sprintf("Number of win: %d", numOfWin)
+		c := fmt.Sprintf("Win: %d | Lose: %d", numOfWin, numOfLose)
 		sendTelegramMessage(token, c)
-		d := fmt.Sprintf("Number of lose: %d", numOfLose)
-		sendTelegramMessage(token, d)
 		return
 	}
 
@@ -371,10 +354,8 @@ func processCandle(c Candle, symbol, token, interval string) {
 			log.Println(b)
 			sendTelegramMessage(token, b)
 			numOfWin += 1
-			c := fmt.Sprintf("Number of win: %d", numOfWin)
+			c := fmt.Sprintf("Win: %d | Lose: %d", numOfWin, numOfLose)
 			sendTelegramMessage(token, c)
-			d := fmt.Sprintf("Number of lose: %d", numOfLose)
-			sendTelegramMessage(token, d)
 			return
 		}
 	} else if state == -1 {
@@ -394,10 +375,8 @@ func processCandle(c Candle, symbol, token, interval string) {
 			log.Println(b)
 			sendTelegramMessage(token, b)
 			numOfWin += 1
-			c := fmt.Sprintf("Number of win: %d", numOfWin)
+			c := fmt.Sprintf("Win: %d | Lose: %d", numOfWin, numOfLose)
 			sendTelegramMessage(token, c)
-			d := fmt.Sprintf("Number of lose: %d", numOfLose)
-			sendTelegramMessage(token, d)
 			return
 		}
 	}
@@ -492,75 +471,4 @@ func stddev(data []float64, mean float64) float64 {
 
 func roundUpToStep(value, step float64) float64 {
 	return math.Ceil(value/step) * step
-}
-
-func isSwingLow(candles []Candle, index, window int) bool {
-	if index < window || index >= len(candles)-window {
-		return false
-	}
-	low := candles[index].Low
-	for i := index - window; i <= index+window; i++ {
-		if candles[i].Low < low {
-			return false
-		}
-	}
-	return true
-}
-
-func (t *TrendTracker) updateTrendline(candles []Candle) (startIdx, endIdx int, valid bool) {
-	for i := len(candles) - t.Window - 1; i >= 0; i-- {
-		if isSwingLow(candles, i, t.Window) {
-			t.Lows = append([]int{i}, t.Lows...) // prepend
-			if len(t.Lows) >= 2 {
-				return t.Lows[0], t.Lows[1], true
-			}
-		}
-	}
-	return 0, 0, false
-}
-
-func (t *TrendTracker) checkTrendBreak(candles []Candle, startIdx, endIdx, currentIdx int) (broken bool, confirmedTop bool) {
-	if endIdx >= len(candles) || startIdx >= len(candles) || currentIdx == 0 {
-		return false, false
-	}
-
-	c0, c1 := candles[startIdx], candles[endIdx]
-	slope := (c1.Low - c0.Low) / float64(endIdx-startIdx)
-	estimatedLow := c1.Low + slope*float64(currentIdx-endIdx)
-
-	current := candles[currentIdx]
-	if current.Close < estimatedLow {
-		t.DropCount++
-		if t.DropCount >= t.MinDropCandles {
-			return true, true // Trend broken and confirmed drop
-		}
-		return true, false
-	}
-
-	t.DropCount = 0
-	return false, false
-}
-
-func (t *TrendTracker) updatePrevHigh(candles []Candle, index int) {
-	current := candles[index]
-	if current.High > t.PrevHigh {
-		t.PrevHigh = current.High
-		t.PrevHighIndex = index
-	}
-}
-
-func (t *TrendTracker) updateSwingLows(candles []Candle, index int) {
-	// Ensure we have enough candles for pattern detection
-	if index < 1 || index >= len(candles)-1 {
-		return
-	}
-
-	prev := candles[index-1]
-	curr := candles[index]
-	next := candles[index+1]
-
-	if curr.Low < prev.Low && curr.Low < next.Low {
-		t.Lows = append(t.Lows, index)
-		log.Printf("Swing low detected at index %d, low: %.2f", index, curr.Low)
-	}
 }
