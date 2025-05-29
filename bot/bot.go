@@ -255,12 +255,12 @@ func processCandle(c Candle, symbol, token, interval string) {
 	rawBuy := (rsiVal < 35 && highVolume && (greenCandle || (redCandle && bottomWickPerc > 60))) || wickSpikeDown
 	rawSell := (rsiVal > 65 && highVolume && (redCandle || (greenCandle && topWickPerc > 60))) || wickSpikeUp
 
-	if wickSpikeDown {
+	if wickSpikeDown && c.Close <= lower {
 		a := fmt.Sprintln("Spike Down- long green needle")
 		sendTelegramMessage(token, a)
 	}
 
-	if wickSpikeUp {
+	if wickSpikeUp && c.Close >= upper {
 		a := fmt.Sprintln("Spike Up- long red needle")
 		sendTelegramMessage(token, a)
 	}

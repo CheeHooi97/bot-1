@@ -8,31 +8,31 @@ import (
 )
 
 var (
-	BinanceApiKey       string
-	BinanceApiSecret    string
-	TelegramTokenBTC1m  string
-	TelegramTokenBTC5m  string
-	TelegramTokenBTC15m string
-	TelegramTokenBTC30m string
-	TelegramTokenBTC1h  string
-	TelegramTokenBTC4h  string
-	// TelegramTokenBTC1d  string
-	TelegramTokenETH1m  string
-	TelegramTokenETH5m  string
-	TelegramTokenETH15m string
-	TelegramTokenETH30m string
-	TelegramTokenETH1h  string
-	TelegramTokenETH4h  string
-	// TelegramTokenETH1d  string
-	TelegramTokenSOL1m  string
-	TelegramTokenSOL15m string
-	TelegramTokenBNB1m  string
-	TelegramTokenBNB15m string
-	TelegramTokenADA1m  string
-	TelegramTokenADA15m string
-	TelegramTokenXRP1m  string
-	TelegramTokenXRP15m string
-	TelegramChatId      string
+	BinanceApiKey    string
+	BinanceApiSecret string
+	BTC1m            string
+	BTC5m            string
+	BTC15m           string
+	BTC30m           string
+	BTC1h            string
+	BTC4h            string
+	// BTC1d  string
+	ETH1m  string
+	ETH5m  string
+	ETH15m string
+	ETH30m string
+	ETH1h  string
+	ETH4h  string
+	// ETH1d  string
+	SOL1m          string
+	SOL15m         string
+	BNB1m          string
+	BNB15m         string
+	ADA1m          string
+	ADA15m         string
+	XRP1m          string
+	XRP15m         string
+	TelegramChatId string
 )
 
 // LoadConfig
@@ -41,27 +41,27 @@ func LoadConfig() {
 
 	BinanceApiKey = GetEnv("BINANCE_API_KEY")
 	BinanceApiSecret = GetEnv("BINANCE_API_SECRET")
-	TelegramTokenBTC1m = GetEnv("TELEGRAM_TOKEN_BTC_1m")
-	TelegramTokenBTC5m = GetEnv("TELEGRAM_TOKEN_BTC_5m")
-	TelegramTokenBTC15m = GetEnv("TELEGRAM_TOKEN_BTC_15m")
-	TelegramTokenBTC30m = GetEnv("TELEGRAM_TOKEN_BTC_30m")
-	TelegramTokenBTC1h = GetEnv("TELEGRAM_TOKEN_BTC_1h")
-	TelegramTokenBTC4h = GetEnv("TELEGRAM_TOKEN_BTC_4h")
-	// TelegramTokenBTC1d = GetEnv("TELEGRAM_TOKEN_BTC_1d")
-	TelegramTokenETH1m = GetEnv("TELEGRAM_TOKEN_ETH_1m")
-	TelegramTokenETH5m = GetEnv("TELEGRAM_TOKEN_ETH_5m")
-	TelegramTokenETH15m = GetEnv("TELEGRAM_TOKEN_ETH_15m")
-	TelegramTokenETH30m = GetEnv("TELEGRAM_TOKEN_ETH_30m")
-	TelegramTokenETH1h = GetEnv("TELEGRAM_TOKEN_ETH_1h")
-	TelegramTokenETH4h = GetEnv("TELEGRAM_TOKEN_ETH_4h")
-	TelegramTokenSOL1m = GetEnv("TELEGRAM_TOKEN_SOL_1m")
-	TelegramTokenSOL15m = GetEnv("TELEGRAM_TOKEN_SOL_15m")
-	TelegramTokenBNB1m = GetEnv("TELEGRAM_TOKEN_BNB_1m")
-	TelegramTokenBNB15m = GetEnv("TELEGRAM_TOKEN_BNB_15m")
-	TelegramTokenADA1m = GetEnv("TELEGRAM_TOKEN_ADA_1m")
-	TelegramTokenADA15m = GetEnv("TELEGRAM_TOKEN_ADA_15m")
-	TelegramTokenXRP1m = GetEnv("TELEGRAM_TOKEN_XRP_1m")
-	TelegramTokenXRP15m = GetEnv("TELEGRAM_TOKEN_XRP_15m")
+	BTC1m = GetEnv("BTC_1m")
+	BTC5m = GetEnv("BTC_5m")
+	BTC15m = GetEnv("BTC_15m")
+	BTC30m = GetEnv("BTC_30m")
+	BTC1h = GetEnv("BTC_1h")
+	BTC4h = GetEnv("BTC_4h")
+	// BTC1d = GetEnv("BTC_1d")
+	ETH1m = GetEnv("ETH_1m")
+	ETH5m = GetEnv("ETH_5m")
+	ETH15m = GetEnv("ETH_15m")
+	ETH30m = GetEnv("ETH_30m")
+	ETH1h = GetEnv("ETH_1h")
+	ETH4h = GetEnv("ETH_4h")
+	SOL1m = GetEnv("SOL_1m")
+	SOL15m = GetEnv("SOL_15m")
+	BNB1m = GetEnv("BNB_1m")
+	BNB15m = GetEnv("BNB_15m")
+	ADA1m = GetEnv("ADA_1m")
+	ADA15m = GetEnv("ADA_15m")
+	XRP1m = GetEnv("XRP_1m")
+	XRP15m = GetEnv("XRP_15m")
 	TelegramChatId = GetEnv("TELEGRAM_CHAT_ID")
 }
 
