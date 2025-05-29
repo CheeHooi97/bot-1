@@ -35,16 +35,6 @@ type Candle struct {
 	IsFinal   bool
 }
 
-type TrendTracker struct {
-	Lows           []int   // Indexes of detected swing lows
-	PrevHigh       float64 // Last significant high
-	PrevHighIndex  int     // Index of that high
-	TrendBrokenAt  int     // Index where trendline was broken
-	DropCount      int     // How many candles have dropped after break
-	MinDropCandles int     // Threshold to confirm trend reversal
-	Window         int     // Lookback window for swing low
-}
-
 var (
 	closes          []float64
 	volumes         []float64
@@ -194,9 +184,6 @@ func waitForShutdown() {
 	<-interrupt
 	log.Println("Shutting down.")
 }
-
-var candles []Candle // global or within bot
-var trendTracker TrendTracker
 
 // processCandle runs the strategy logic on each closed candle
 func processCandle(c Candle, symbol, token, interval string) {
