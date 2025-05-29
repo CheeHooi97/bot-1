@@ -287,7 +287,11 @@ func processCandle(c Candle, symbol, token, interval string) {
 		b := fmt.Sprintf("Total profit/loss : %.2f", totalProfitLoss)
 		log.Println(b)
 		sendTelegramMessage(token, b)
-		numOfLose += numOfLose
+		numOfLose += 1
+		c := fmt.Sprintf("Number of win: %d", numOfWin)
+		sendTelegramMessage(token, c)
+		d := fmt.Sprintf("Number of lose: %d", numOfLose)
+		sendTelegramMessage(token, d)
 		return
 	}
 	if state == -1 && c.Close >= entryPrice*(1+stopLossPercent/100) {
@@ -304,7 +308,11 @@ func processCandle(c Candle, symbol, token, interval string) {
 		b := fmt.Sprintf("Total profit/loss : %.2f", totalProfitLoss)
 		log.Println(b)
 		sendTelegramMessage(token, b)
-		numOfLose += numOfLose
+		numOfLose += 1
+		c := fmt.Sprintf("Number of win: %d", numOfWin)
+		sendTelegramMessage(token, c)
+		d := fmt.Sprintf("Number of lose: %d", numOfLose)
+		sendTelegramMessage(token, d)
 		return
 	}
 
@@ -362,7 +370,11 @@ func processCandle(c Candle, symbol, token, interval string) {
 			b := fmt.Sprintf("Total profit/loss : %.2f", totalProfitLoss)
 			log.Println(b)
 			sendTelegramMessage(token, b)
-			numOfWin += numOfWin
+			numOfWin += 1
+			c := fmt.Sprintf("Number of win: %d", numOfWin)
+			sendTelegramMessage(token, c)
+			d := fmt.Sprintf("Number of lose: %d", numOfLose)
+			sendTelegramMessage(token, d)
 			return
 		}
 	} else if state == -1 {
@@ -381,7 +393,11 @@ func processCandle(c Candle, symbol, token, interval string) {
 			b := fmt.Sprintf("Total profit/loss : %.2f", totalProfitLoss)
 			log.Println(b)
 			sendTelegramMessage(token, b)
-			numOfWin += numOfWin
+			numOfWin += 1
+			c := fmt.Sprintf("Number of win: %d", numOfWin)
+			sendTelegramMessage(token, c)
+			d := fmt.Sprintf("Number of lose: %d", numOfLose)
+			sendTelegramMessage(token, d)
 			return
 		}
 	}
