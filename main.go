@@ -36,8 +36,7 @@ func main() {
 
 	tokenMap := constant.GetTokenMap()
 
-	var token string
-	token = tokenMap[symbol].(map[string]string)[interval]
+	token := tokenMap[symbol].(map[string]string)[interval]
 
 	bot.Bot(symbol, interval, token, stopLossPercent)
 }
