@@ -59,6 +59,8 @@ var (
 	entryPrice      float64
 	state           = 0 // 0 = neutral, 1 = long, -1 = short
 	stopLossPercent float64
+	numOfWin        = 0
+	numOfLose       = 0
 )
 
 // Bot runs the trading bot on given symbol, interval and stop loss percent
@@ -285,6 +287,7 @@ func processCandle(c Candle, symbol, token, interval string) {
 		b := fmt.Sprintf("Total profit/loss : %.2f", totalProfitLoss)
 		log.Println(b)
 		sendTelegramMessage(token, b)
+		numOfLose += numOfLose
 		return
 	}
 	if state == -1 && c.Close >= entryPrice*(1+stopLossPercent/100) {
@@ -301,6 +304,7 @@ func processCandle(c Candle, symbol, token, interval string) {
 		b := fmt.Sprintf("Total profit/loss : %.2f", totalProfitLoss)
 		log.Println(b)
 		sendTelegramMessage(token, b)
+		numOfLose += numOfLose
 		return
 	}
 
@@ -358,6 +362,7 @@ func processCandle(c Candle, symbol, token, interval string) {
 			b := fmt.Sprintf("Total profit/loss : %.2f", totalProfitLoss)
 			log.Println(b)
 			sendTelegramMessage(token, b)
+			numOfWin += numOfWin
 			return
 		}
 	} else if state == -1 {
@@ -376,6 +381,7 @@ func processCandle(c Candle, symbol, token, interval string) {
 			b := fmt.Sprintf("Total profit/loss : %.2f", totalProfitLoss)
 			log.Println(b)
 			sendTelegramMessage(token, b)
+			numOfWin += numOfWin
 			return
 		}
 	}
