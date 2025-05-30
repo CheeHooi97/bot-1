@@ -1,11 +1,11 @@
 package constant
 
 var SymbolPrecisionMap = map[string][]int{
-	"btcusdt": {2, 3}, // pricePrecision = 2, amountPrecision = 4
+	"btcusdt": {2, 3}, // priceDecimal = 2, positionSizeDecimal = 4
 	"ethusdt": {2, 2},
-	"adausdt": {4, 0},
-	"bnbusdt": {2, 1},
-	"solusdt": {2, 1},
+	"adausdt": {3, 0},
+	"bnbusdt": {1, 1},
+	"solusdt": {1, 1},
 	"xrpusdt": {2, 0},
 }
 
