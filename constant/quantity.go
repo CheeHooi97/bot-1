@@ -1,21 +1,21 @@
 package constant
 
 var SymbolPrecisionMap = map[string][]int{
-	"btcusdt": {2, 4}, // pricePrecision = 2, amountPrecision = 4
+	"btcusdt": {2, 3}, // pricePrecision = 2, amountPrecision = 4
 	"ethusdt": {2, 2},
-	"adausdt": {4, 2},
-	"bnbusdt": {2, 2},
-	"solusdt": {2, 2},
-	"xrpusdt": {2, 2},
+	"adausdt": {4, 0},
+	"bnbusdt": {2, 1},
+	"solusdt": {2, 1},
+	"xrpusdt": {2, 0},
 }
 
-var StepMap = map[string]float64{
-	"btcusdt": 0.001,
-	"ethusdt": 0.01,
-	"adausdt": 0.1,
-	"bnbusdt": 0.1,
-	"solusdt": 0.1,
-	"xrpusdt": 0.1,
+var QuantityMap = map[string]float64{
+	"btcusdt": 0.005,
+	"ethusdt": 0.2,
+	"adausdt": 700,
+	"bnbusdt": 0.5,
+	"solusdt": 1,
+	"xrpusdt": 100,
 }
 
 var PercentageMap = map[string]float64{
