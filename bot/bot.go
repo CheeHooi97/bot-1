@@ -172,7 +172,7 @@ func startWebSocket(symbol, interval, token string) {
 			sendTelegramMessage(token, msg)
 		}
 
-		processCandle(candle, symbol, token, interval)
+		processCandle(candle, symbol, token)
 	}
 }
 
@@ -184,7 +184,7 @@ func waitForShutdown() {
 }
 
 // processCandle runs the strategy logic on each closed candle
-func processCandle(c Candle, symbol, token, interval string) {
+func processCandle(c Candle, symbol, token string) {
 	s := strings.ToUpper(symbol[:len(symbol)-4])
 
 	closes = append(closes, c.Close)
@@ -236,9 +236,9 @@ func processCandle(c Candle, symbol, token, interval string) {
 		positionSize := strconv.FormatFloat(size, 'f', constant.SymbolPrecisionMap[symbol][1], 64)
 		profit := (c.Close - entryPrice) * size
 		percentChange := ((c.Close - entryPrice) / entryPrice) * 100
-		price := strconv.FormatFloat(c.Close, 'f', 2, 64)
+		price := strconv.FormatFloat(c.Close, 'f', constant.SymbolPrecisionMap[symbol][0], 64)
 		balance += size*c.Close + profit
-		// placeOrder(symbol, "SELL", size)
+		// placeOrder(symbol, "SELL")
 		a := fmt.Sprintf("STOP LOSS [LONG]\nAmount: "+"%s "+"%s"+"\nPrice: "+price+"\nPercent changed: %.2f\nLoss: %.2f USDT\nBalance: %.2f USDT\n", positionSize, s, price, percentChange, profit, balance)
 		log.Println(a)
 		sendTelegramMessage(token, a)
@@ -257,9 +257,9 @@ func processCandle(c Candle, symbol, token, interval string) {
 		positionSize := strconv.FormatFloat(size, 'f', constant.SymbolPrecisionMap[symbol][1], 64)
 		profit := (entryPrice - c.Close) * size
 		percentChange := ((c.Close - entryPrice) / entryPrice) * 100
-		price := strconv.FormatFloat(c.Close, 'f', 2, 64)
+		price := strconv.FormatFloat(c.Close, 'f', constant.SymbolPrecisionMap[symbol][0], 64)
 		balance += size*c.Close + profit
-		// placeOrder(symbol, "BUY", size)
+		// placeOrder(symbol, "BUY")
 		a := fmt.Sprintf("STOP LOSS [SHORT]\nAmount: "+"%s "+"%s"+"\nPrice: "+"%s"+"\nPercent changed: %.2f\nLoss: %.2f USDT\nBalance: %.2f USDT\n", positionSize, s, price, percentChange, profit, balance)
 		log.Println(a)
 		sendTelegramMessage(token, a)
@@ -283,11 +283,11 @@ func processCandle(c Candle, symbol, token, interval string) {
 				size := constant.QuantityMap[symbol]
 				positionSize := strconv.FormatFloat(size, 'f', constant.SymbolPrecisionMap[symbol][1], 64)
 				entryPrice = c.Close
-				price := strconv.FormatFloat(entryPrice, 'f', constant.SymbolPrecisionMap[symbol][1], 64)
+				price := strconv.FormatFloat(entryPrice, 'f', constant.SymbolPrecisionMap[symbol][0], 64)
 				balance -= size * c.Close
 				state = 1
 				stopLoss := strconv.FormatFloat(c.Close*(1-stopLossPercent/100), 'f', 2, 64)
-				// placeOrder(symbol, "BUY", size)
+				// placeOrder(symbol, "BUY")
 				a := fmt.Sprintf("[LONG]\nAmount:"+"%s "+"%s"+"\nPrice: "+"%s"+"\nStop loss: "+"%s"+"\nBalance: %.2f", positionSize, s, price, stopLoss, balance)
 				log.Println(a)
 				sendTelegramMessage(token, a)
@@ -304,11 +304,11 @@ func processCandle(c Candle, symbol, token, interval string) {
 				size := constant.QuantityMap[symbol]
 				positionSize := strconv.FormatFloat(size, 'f', constant.SymbolPrecisionMap[symbol][1], 64)
 				entryPrice = c.Close
-				price := strconv.FormatFloat(entryPrice, 'f', constant.SymbolPrecisionMap[symbol][1], 64)
+				price := strconv.FormatFloat(entryPrice, 'f', constant.SymbolPrecisionMap[symbol][0], 64)
 				balance -= size * c.Close
 				state = 1
 				stopLoss := strconv.FormatFloat(c.Close*(1-stopLossPercent/100), 'f', 2, 64)
-				// placeOrder(symbol, "BUY", size)
+				// placeOrder(symbol, "BUY")
 				a := fmt.Sprintf("[LONG]\nAmount:"+"%s "+"%s"+"\nPrice: "+"%s"+"\nStop loss: "+"%s"+"\nBalance: %.2f", positionSize, s, price, stopLoss, balance)
 				log.Println(a)
 				sendTelegramMessage(token, a)
@@ -326,9 +326,9 @@ func processCandle(c Candle, symbol, token, interval string) {
 			positionSize := strconv.FormatFloat(size, 'f', constant.SymbolPrecisionMap[symbol][1], 64)
 			profit := (c.Close - entryPrice) * size
 			percentChange := ((c.Close - entryPrice) / entryPrice) * 100
-			price := strconv.FormatFloat(c.Close, 'f', 2, 64)
+			price := strconv.FormatFloat(c.Close, 'f', constant.SymbolPrecisionMap[symbol][0], 64)
 			balance += size*c.Close + profit
-			// placeOrder(symbol, "SELL", size)
+			// placeOrder(symbol, "SELL")
 			a := fmt.Sprintf("Closed [LONG]\nAmount: "+"%s "+"%s"+"\nPrice: "+"%s"+"\nPercent changed: %.2f\nProfit: %.2f USDT\nBalance: %.2f USDT\n", positionSize, s, price, percentChange, profit, balance)
 			log.Println(a)
 			sendTelegramMessage(token, a)
@@ -353,9 +353,9 @@ func processCandle(c Candle, symbol, token, interval string) {
 			positionSize := strconv.FormatFloat(size, 'f', constant.SymbolPrecisionMap[symbol][1], 64)
 			profit := (entryPrice - c.Close) * size
 			percentChange := ((c.Close - entryPrice) / entryPrice) * 100
-			price := strconv.FormatFloat(c.Close, 'f', 2, 64)
+			price := strconv.FormatFloat(c.Close, 'f', constant.SymbolPrecisionMap[symbol][0], 64)
 			balance += size*c.Close + profit
-			// placeOrder(symbol, "BUY", size)
+			// placeOrder(symbol, "BUY")
 			a := fmt.Sprintf("Closed [SHORT]\nAmount: "+"%s "+"%s"+"\nPrice: "+"%s"+"\nPercent changed: %.2f\nProfit: %.2f USDT\nBalance: %.2f USDT\n", positionSize, s, price, percentChange, profit, balance)
 			log.Println(a)
 			sendTelegramMessage(token, a)
@@ -376,7 +376,7 @@ func processCandle(c Candle, symbol, token, interval string) {
 	}
 }
 
-func placeOrder(symbol string, side string, quantity float64) {
+func placeOrder(symbol string, side string) {
 	endpoint := "https://fapi.binance.com/fapi/v1/order"
 	timestamp := time.Now().UnixMilli()
 
