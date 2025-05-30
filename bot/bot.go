@@ -231,28 +231,8 @@ func processCandle(c Candle, symbol, token, interval string) {
 	upper := basis + bbMult*stdDev
 	lower := basis - bbMult*stdDev
 
-	// sudden spike up/down
-	spikeUpPerc := ((c.High - c.Open) / c.Open * 100)
-	spikeDownPerc := ((c.Low - c.Open) / c.Open * 100)
-	percent := constant.PercentageMap[interval]
-
-	// long needle and close as red candle with volumex2
-	wickSpikeUp := spikeUpPerc >= percent && redCandle && extremeHighVolume
-	// long needle and close as green candle with volumex2
-	wickSpikeDown := spikeDownPerc <= percent && greenCandle && extremeHighVolume
-
-	rawBuy := (rsiVal < 35 && highVolume && (greenCandle || (redCandle && bottomWickPerc > 60))) || wickSpikeDown
-	rawSell := (rsiVal > 65 && highVolume && (redCandle || (greenCandle && topWickPerc > 60))) || wickSpikeUp
-
-	if wickSpikeDown && c.Close <= lower {
-		a := fmt.Sprintln("Spike Down- long green needle")
-		sendTelegramMessage(token, a)
-	}
-
-	if wickSpikeUp && c.Close >= upper {
-		a := fmt.Sprintln("Spike Up- long red needle")
-		sendTelegramMessage(token, a)
-	}
+	rawBuy := (rsiVal < 35 && highVolume && (greenCandle || (redCandle && bottomWickPerc > 60))) || extremeHighVolume
+	rawSell := (rsiVal > 65 && highVolume && (redCandle || (greenCandle && topWickPerc > 60))) || extremeHighVolume
 
 	combinedBuy := rawBuy && c.Close <= lower
 	combinedSell := rawSell && c.Close >= upper
