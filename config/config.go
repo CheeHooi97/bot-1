@@ -13,14 +13,12 @@ var (
 	BTC1m            string
 	BTC5m            string
 	BTC15m           string
-	BTC30m           string
 	BTC1h            string
 	BTC4h            string
 	// BTC1d  string
 	ETH1m  string
 	ETH5m  string
 	ETH15m string
-	ETH30m string
 	ETH1h  string
 	ETH4h  string
 	// ETH1d  string
@@ -44,14 +42,12 @@ func LoadConfig() {
 	BTC1m = GetEnv("BTC_1m")
 	BTC5m = GetEnv("BTC_5m")
 	BTC15m = GetEnv("BTC_15m")
-	BTC30m = GetEnv("BTC_30m")
 	BTC1h = GetEnv("BTC_1h")
 	BTC4h = GetEnv("BTC_4h")
 	// BTC1d = GetEnv("BTC_1d")
 	ETH1m = GetEnv("ETH_1m")
 	ETH5m = GetEnv("ETH_5m")
 	ETH15m = GetEnv("ETH_15m")
-	ETH30m = GetEnv("ETH_30m")
 	ETH1h = GetEnv("ETH_1h")
 	ETH4h = GetEnv("ETH_4h")
 	SOL1m = GetEnv("SOL_1m")

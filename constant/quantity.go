@@ -1,7 +1,9 @@
 package constant
 
+// priceDecimal = 3 eg: ADA, 0.752
+// positionSizeDecimal = 2 eg: ETH, 0.02
 var SymbolPrecisionMap = map[string][]int{
-	"btcusdt": {2, 3}, // priceDecimal = 2, positionSizeDecimal = 4
+	"btcusdt": {2, 3},
 	"ethusdt": {2, 2},
 	"adausdt": {3, 0},
 	"bnbusdt": {1, 1},
