@@ -202,7 +202,7 @@ func processCandle(c Candle, symbol, token string) {
 	rsiVal := calcRSI(closes, rsiLength)
 	avgVolume := sma(volumes, volumeLookback)
 	highVolume := c.Volume > avgVolume*1.5
-	extremeHighVolume := c.Volume > avgVolume*2
+	extremeHighVolume := c.Volume > avgVolume*3
 
 	greenCandle := c.Close > c.Open
 	redCandle := c.Close < c.Open
