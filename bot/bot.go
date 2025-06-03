@@ -71,6 +71,9 @@ func Bot(symbol, interval, token string, threadId int64, slPercent float64) {
 		volumes = volumes[len(volumes)-500:]
 	}
 
+	msg := fmt.Sprintf("Symbol: %s %s start~", symbol, interval)
+	sendTelegramMessage(token, msg, threadId)
+
 	// Start WebSocket
 	go startWebSocket(strings.ToLower(symbol), interval, token, threadId)
 	waitForShutdown()
@@ -161,9 +164,6 @@ func startWebSocket(symbol, interval, token string, threadId int64) {
 				spikeUpPerc := ((candle.High - candle.Open) / candle.Open * 100)
 				spikeDownPerc := ((candle.Low - candle.Open) / candle.Open * 100)
 				a := constant.PercentageMap[interval]
-
-				msg := fmt.Sprintf("Symbol: %s %s start~", symbol, interval)
-				sendTelegramMessage(token, msg, threadId)
 
 				if spikeUpPerc >= a {
 					msg := fmt.Sprintf("⚠️ Sudden PUMP detected!\nSymbol: %s\nHigh: %.4f\nOpen: %.4f\nChange: +%.2f%%", symbol, candle.High, candle.Open, spikeUpPerc)
