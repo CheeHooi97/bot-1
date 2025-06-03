@@ -2,57 +2,57 @@ package constant
 
 func GetThreadIdMap() map[string]any {
 	return map[string]any{
-		"btcusdt": map[string]string{
-			"1m":  "",
-			"5m":  "",
-			"15m": "",
-			"1h":  "",
-			"4h":  "",
+		"btcusdt": map[string]int64{
+			"1m":  0,
+			"5m":  0,
+			"15m": 0,
+			"1h":  0,
+			"4h":  0,
 		},
-		"ethusdt": map[string]string{
-			"1m":  "",
-			"5m":  "",
-			"15m": "",
-			"1h":  "",
-			"4h":  "",
+		"ethusdt": map[string]int64{
+			"1m":  0,
+			"5m":  0,
+			"15m": 0,
+			"1h":  0,
+			"4h":  0,
 		},
-		"solusdt": map[string]string{
-			"1m":  "",
-			"5m":  "",
-			"15m": "",
-			// "1h": "",
-			// "4h": "",
-			// "1d": "",
+		"solusdt": map[string]int64{
+			"1m":  0,
+			"5m":  0,
+			"15m": 0,
+			// "1h": 0,
+			// "4h": 0,
+			// "1d": 0,
 		},
-		"bnbusdt": map[string]string{
-			"1m": "",
-			// "5m":  "",
-			"15m": "",
-			// "1h":  "",
-			// "4h":"",
-			// "1d": "",
+		"bnbusdt": map[string]int64{
+			"1m": 0,
+			// "5m":  0,
+			"15m": 0,
+			// "1h":  0,
+			// "4h":0,
+			// "1d": 0,
 		},
-		"adausdt": map[string]string{
-			"1m":  "5",
-			"5m":  "",
-			"15m": "",
-			// "1h": "",
-			// "4h": "",
-			// "1d": "",
+		"adausdt": map[string]int64{
+			"1m":  5,
+			"5m":  0,
+			"15m": 0,
+			// "1h": 0,
+			// "4h": 0,
+			// "1d": 0,
 		},
-		"xrpusdt": map[string]string{
-			"1m": "",
-			// "5m":   "",
-			"15m": "",
-			// "1h": "",
-			// "4h":"",
-			// "1d": "",
+		"xrpusdt": map[string]int64{
+			"1m": 0,
+			// "5m":   0,
+			"15m": 0,
+			// "1h": 0,
+			// "4h":0,
+			// "1d": 0,
 		},
-		"hypeusdt": map[string]string{
-			"1m": "",
+		"hypeusdt": map[string]int64{
+			"1m": 0,
 		},
-		"dogeusdt": map[string]string{
-			"1m": "",
+		"dogeusdt": map[string]int64{
+			"1m": 0,
 		},
 	}
 }

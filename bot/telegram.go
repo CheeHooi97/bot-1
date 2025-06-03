@@ -2,24 +2,28 @@ package bot
 
 import (
 	"bot-1/config"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
-	"strings"
 )
 
-func sendTelegramMessage(token, message, threadId string) {
+func sendTelegramMessage(token, message string, threadId int64) {
 	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", token)
-	data := url.Values{}
-	data.Set("chat_id", config.TelegramChatId)
-	data.Set("message_thread_id", threadId)
-	data.Set("text", message)
+
+	data := map[string]any{
+		"chat_id":           config.TelegramChatId,
+		"message_thread_id": threadId,
+		"text":              message,
+	}
+
+	payload, _ := json.Marshal(data)
 
 	resp, err := http.Post(
 		apiURL,
 		"application/x-www-form-urlencoded",
-		strings.NewReader(data.Encode()),
+		bytes.NewBuffer(payload),
 	)
 	if err != nil {
 		log.Println("Error sending message:", err)
