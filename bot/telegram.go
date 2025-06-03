@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"bot-1/config"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -13,7 +12,7 @@ func sendTelegramMessage(token, message string, threadId int64) {
 	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", token)
 
 	data := map[string]any{
-		"chat_id":           config.TelegramChatId,
+		"chat_id":           -1002415528260,
 		"message_thread_id": threadId,
 		"text":              message,
 	}
