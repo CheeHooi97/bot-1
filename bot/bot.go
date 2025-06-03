@@ -52,7 +52,7 @@ var (
 )
 
 // Bot runs the trading bot on given symbol, interval and stop loss percent
-func Bot(symbol, interval, token, threadId string, slPercent float64) {
+func Bot(symbol, interval, token string, threadId int64, slPercent float64) {
 	stopLossPercent = slPercent
 
 	// Fetch historical candles
@@ -116,7 +116,7 @@ func parseStringToFloat(s any) float64 {
 	return val
 }
 
-func startWebSocket(symbol, interval, token, threadId string) {
+func startWebSocket(symbol, interval, token string, threadId int64) {
 	urlStr := fmt.Sprintf("wss://fstream.binance.com/ws/%s@kline_%s", symbol, interval)
 
 	for {
@@ -192,7 +192,7 @@ func waitForShutdown() {
 }
 
 // processCandle runs the strategy logic on each closed candle
-func processCandle(c Candle, symbol, token, threadId string) {
+func processCandle(c Candle, symbol, token string, threadId int64) {
 	s := strings.ToUpper(symbol[:len(symbol)-4])
 
 	closes = append(closes, c.Close)

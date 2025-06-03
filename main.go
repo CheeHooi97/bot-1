@@ -40,7 +40,7 @@ func main() {
 
 	threadMap := constant.GetThreadIdMap()
 
-	threadId := threadMap[symbol].(map[string]string)[interval]
+	threadId := threadMap[symbol].(map[string]int64)[interval]
 
 	bot.Bot(symbol, interval, token, threadId, stopLossPercent)
 }
