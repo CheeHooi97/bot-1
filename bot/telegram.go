@@ -27,8 +27,6 @@ func sendTelegramMessage(token, message string, threadId int64) {
 		return
 	}
 
-	fmt.Println(string(jsonBody))
-
 	// Send the request
 	resp, err := http.Post(apiURL, "application/json", bytes.NewBuffer(jsonBody))
 	if err != nil {
