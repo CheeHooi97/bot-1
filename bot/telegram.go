@@ -13,7 +13,7 @@ func sendTelegramMessage(token, message string, threadId int64) {
 
 	data := map[string]any{
 		"chat_id":           -1002415528260,
-		"message_thread_id": threadId,
+		"message_thread_id": 5,
 		"text":              message,
 	}
 
