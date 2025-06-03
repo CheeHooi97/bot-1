@@ -38,5 +38,9 @@ func main() {
 
 	token := tokenMap[symbol].(map[string]string)[interval]
 
-	bot.Bot(symbol, interval, token, stopLossPercent)
+	threadMap := constant.GetThreadIdMap()
+
+	threadId := threadMap[symbol].(map[string]string)[interval]
+
+	bot.Bot(symbol, interval, token, threadId, stopLossPercent)
 }

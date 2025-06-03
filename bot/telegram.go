@@ -9,10 +9,11 @@ import (
 	"strings"
 )
 
-func sendTelegramMessage(token, message string) {
+func sendTelegramMessage(token, message, threadId string) {
 	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", token)
 	data := url.Values{}
 	data.Set("chat_id", config.TelegramChatId)
+	data.Set("message_thread_id", threadId)
 	data.Set("text", message)
 
 	resp, err := http.Post(
