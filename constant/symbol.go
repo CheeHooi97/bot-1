@@ -21,8 +21,8 @@ func GetTokenMap() map[string]any {
 			// "1d":  config.ETH1d,
 		},
 		"solusdt": map[string]string{
-			"1m": config.SOL1m,
-			// "5m":  config.SOL5m,
+			"1m":  config.SOL1m,
+			"5m":  config.SOL5m,
 			"15m": config.SOL15m,
 			// "1h":  config.SOL1h,
 			// "4h":  config.SOL4h,
@@ -37,8 +37,8 @@ func GetTokenMap() map[string]any {
 			// "1d":  config.BNB1d,
 		},
 		"adausdt": map[string]string{
-			"1m": config.ADA1m,
-			// "5m":   config.ADA5m,
+			"1m":  config.ADA1m,
+			"5m":  config.ADA5m,
 			"15m": config.ADA15m,
 			// "1h":  config.ADA1h,
 			// "4h": config.ADA4h,
