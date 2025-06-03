@@ -1,9 +1,11 @@
 package bot
 
 import (
+	"bot-1/config"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 )
@@ -11,28 +13,33 @@ import (
 func sendTelegramMessage(token, message string, threadId int64) {
 	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", token)
 
-	fmt.Printf("ApiUrl: %s\n", apiURL)
-
-	data := map[string]any{
-		"chat_id":           -1002415528260,
-		"message_thread_id": 5,
-		"text":              message,
+	// Use a map for the JSON payload
+	payload := map[string]any{
+		"chat_id":           config.TelegramChatId, // Make sure it's correct
+		"message_thread_id": threadId,              // Can be int64
+		"text":              message,               // Must not be empty
 	}
 
-	payload, _ := json.Marshal(data)
+	// Marshal the map into JSON
+	jsonBody, err := json.Marshal(payload)
+	if err != nil {
+		log.Println("Error encoding JSON:", err)
+		return
+	}
 
-	resp, err := http.Post(
-		apiURL,
-		"application/x-www-form-urlencoded",
-		bytes.NewBuffer(payload),
-	)
+	fmt.Println(string(jsonBody))
+
+	// Send the request
+	resp, err := http.Post(apiURL, "application/json", bytes.NewBuffer(jsonBody))
 	if err != nil {
 		log.Println("Error sending message:", err)
 		return
 	}
 	defer resp.Body.Close()
 
+	// Read and print the response
+	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("Failed to send message: %s\n", resp.Status)
+		log.Printf("Failed to send message: %s\nBody: %s\n", resp.Status, string(body))
 	}
 }

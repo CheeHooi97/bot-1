@@ -71,7 +71,7 @@ func Bot(symbol, interval, token string, threadId int64, slPercent float64) {
 		volumes = volumes[len(volumes)-500:]
 	}
 
-	msg := fmt.Sprintf("Symbol: %s %s start~", symbol, interval)
+	msg := fmt.Sprintf("%s %s start~~~", symbol, interval)
 	sendTelegramMessage(token, msg, threadId)
 
 	// Start WebSocket
