@@ -117,62 +117,67 @@ func parseStringToFloat(s any) float64 {
 }
 
 func startWebSocket(symbol, interval, token string) {
-	url := fmt.Sprintf("wss://fstream.binance.com/ws/%s@kline_%s", symbol, interval)
-	log.Println("Connecting to ", url)
-	c, _, err := websocket.DefaultDialer.Dial(url, nil)
-	if err != nil {
-		log.Fatal("WebSocket dial error:", err)
-	}
-	defer c.Close()
+	urlStr := fmt.Sprintf("wss://fstream.binance.com/ws/%s@kline_%s", symbol, interval)
 
 	for {
-		_, message, err := c.ReadMessage()
+		log.Println("Connecting to", urlStr)
+		c, _, err := websocket.DefaultDialer.Dial(urlStr, nil)
 		if err != nil {
-			log.Println("Read error:", err)
-			time.Sleep(3 * time.Second)
+			log.Println("WebSocket dial error:", err)
+			time.Sleep(5 * time.Second)
 			continue
 		}
 
-		var raw map[string]any
-		if err := json.Unmarshal(message, &raw); err != nil {
-			continue
-		}
+		func(conn *websocket.Conn) {
+			defer conn.Close()
 
-		kline, ok := raw["k"].(map[string]any)
-		if !ok {
-			continue
-		}
+			for {
+				_, message, err := conn.ReadMessage()
+				if err != nil {
+					log.Println("Read error:", err)
+					return // exit inner loop to reconnect
+				}
 
-		if !kline["x"].(bool) { // only closed candles
-			continue
-		}
+				var raw map[string]any
+				if err := json.Unmarshal(message, &raw); err != nil {
+					continue
+				}
 
-		candle := Candle{
-			Open:      parseStringToFloat(kline["o"]),
-			High:      parseStringToFloat(kline["h"]),
-			Low:       parseStringToFloat(kline["l"]),
-			Close:     parseStringToFloat(kline["c"]),
-			Volume:    parseStringToFloat(kline["v"]),
-			CloseTime: time.UnixMilli(int64(kline["T"].(float64))),
-			IsFinal:   true,
-		}
+				kline, ok := raw["k"].(map[string]any)
+				if !ok || !kline["x"].(bool) {
+					continue
+				}
 
-		spikeUpPerc := ((candle.High - candle.Open) / candle.Open * 100)
-		spikeDownPerc := ((candle.Low - candle.Open) / candle.Open * 100)
+				candle := Candle{
+					Open:      parseStringToFloat(kline["o"]),
+					High:      parseStringToFloat(kline["h"]),
+					Low:       parseStringToFloat(kline["l"]),
+					Close:     parseStringToFloat(kline["c"]),
+					Volume:    parseStringToFloat(kline["v"]),
+					CloseTime: time.UnixMilli(int64(kline["T"].(float64))),
+					IsFinal:   true,
+				}
 
-		a := constant.PercentageMap[interval]
+				spikeUpPerc := ((candle.High - candle.Open) / candle.Open * 100)
+				spikeDownPerc := ((candle.Low - candle.Open) / candle.Open * 100)
+				a := constant.PercentageMap[interval]
 
-		if spikeUpPerc >= a {
-			msg := fmt.Sprintf("⚠️ Sudden PUMP detected!\nSymbol: %s\nHigh: %.4f\nOpen: %.4f\nChange: +%.2f%%", symbol, candle.High, candle.Open, spikeUpPerc)
-			sendTelegramMessage(token, msg)
-		}
+				if spikeUpPerc >= a {
+					msg := fmt.Sprintf("⚠️ Sudden PUMP detected!\nSymbol: %s\nHigh: %.4f\nOpen: %.4f\nChange: +%.2f%%", symbol, candle.High, candle.Open, spikeUpPerc)
+					sendTelegramMessage(token, msg)
+				}
 
-		if spikeDownPerc <= -a {
-			msg := fmt.Sprintf("⚠️ Sudden DUMP detected!\nSymbol: %s\nLow: %.4f\nOpen: %.4f\nChange: %.2f%%", symbol, candle.Low, candle.Open, spikeDownPerc)
-			sendTelegramMessage(token, msg)
-		}
+				if spikeDownPerc <= -a {
+					msg := fmt.Sprintf("⚠️ Sudden DUMP detected!\nSymbol: %s\nLow: %.4f\nOpen: %.4f\nChange: %.2f%%", symbol, candle.Low, candle.Open, spikeDownPerc)
+					sendTelegramMessage(token, msg)
+				}
 
-		processCandle(candle, symbol, token)
+				processCandle(candle, symbol, token)
+			}
+		}(c)
+
+		log.Println("WebSocket disconnected. Reconnecting in 5s...")
+		time.Sleep(5 * time.Second)
 	}
 }
 
