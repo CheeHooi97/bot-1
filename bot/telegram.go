@@ -67,12 +67,12 @@ func listenTelegramCommands(token string, threadId int64) {
 
 func handleTelegramCommand(command string, token string, threadId int64) {
 	switch command {
-	case "/start":
+	case "start":
 		tradingEnabled = true
 		msg := "Trading bot has been STARTED. Processing candles and placing orders."
 		log.Println(msg)
 		sendTelegramMessage(token, msg, threadId)
-	case "/stop":
+	case "stop":
 		tradingEnabled = false
 		msg := "Trading bot has been STOPPED. Still processing candles, but will not trade."
 		log.Println(msg)
