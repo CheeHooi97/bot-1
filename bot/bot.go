@@ -36,6 +36,7 @@ type Candle struct {
 }
 
 var (
+	tradingEnabled  = false
 	closes          []float64
 	volumes         []float64
 	rsiLength       = 14
@@ -76,6 +77,9 @@ func Bot(symbol, interval, token string, threadId int64, slPercent float64) {
 
 	// Start WebSocket
 	go startWebSocket(strings.ToLower(symbol), interval, token, threadId)
+
+	go listenTelegramCommands(token, threadId)
+
 	waitForShutdown()
 }
 
@@ -282,6 +286,11 @@ func processCandle(c Candle, symbol, token string, threadId int64) {
 		return
 	}
 
+	if !tradingEnabled {
+		log.Println("Trading is disabled. Candle processed, no action taken.")
+		return
+	}
+
 	// === TRADING LOGIC ===
 	if state == 0 {
 		// Neutral: open position on any signal
@@ -314,7 +323,7 @@ func processCandle(c Candle, symbol, token string, threadId int64) {
 				entryPrice = c.Close
 				price := strconv.FormatFloat(entryPrice, 'f', constant.SymbolPrecisionMap[symbol][0], 64)
 				balance -= size * c.Close
-				state = 1
+				state = -1
 				stopLoss := strconv.FormatFloat(c.Close*(1-stopLossPercent/100), 'f', 2, 64)
 				// placeOrder(symbol, "SELL")
 				a := fmt.Sprintf("[LONG]\nAmount: %s %s \nPrice: %s \nStop loss: %s \nBalance: %.2f", positionSize, s, price, stopLoss, balance)
