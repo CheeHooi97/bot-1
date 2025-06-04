@@ -80,6 +80,9 @@ func Bot(symbol, interval, token string, threadId int64, slPercent float64) {
 
 	go listenTelegramCommands(token, threadId)
 
+	// Prevent main from exiting
+	select {}
+
 	waitForShutdown()
 }
 
