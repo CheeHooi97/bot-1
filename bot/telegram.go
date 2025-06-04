@@ -8,9 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
-
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"time"
 )
 
 func sendTelegramMessage(token, message string, threadId int64) {
@@ -46,27 +44,22 @@ func sendTelegramMessage(token, message string, threadId int64) {
 }
 
 func listenTelegramCommands(token string, threadId int64) {
-	botAPI, err := tgbotapi.NewBotAPI(token)
-	if err != nil {
-		log.Fatalf("Failed to create bot: %v", err)
-	}
+	for {
+		updates := fetchUpdates(token)
+		for _, update := range updates {
+			offset = update.UpdateID + 1 // Avoid reprocessing
 
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-
-	updates := botAPI.GetUpdatesChan(u)
-
-	for update := range updates {
-		if update.Message == nil || update.Message.Text == "" {
-			continue
+			// Dispatch each update in its own goroutine
+			go handleTelegramCommand(update, token, threadId)
 		}
-		command := strings.ToLower(update.Message.Text)
-		go handleTelegramCommand(command, token, threadId)
+		time.Sleep(1 * time.Second) // Avoid hammering Telegram API
 	}
 }
 
-func handleTelegramCommand(command string, token string, threadId int64) {
-	switch command {
+func handleTelegramCommand(update Update, token string, threadId int64) {
+	message := update.Message.Text
+
+	switch message {
 	case "/start":
 		tradingEnabled = true
 		msg := "Trading bot has been STARTED. Processing candles and placing orders."
@@ -78,6 +71,47 @@ func handleTelegramCommand(command string, token string, threadId int64) {
 		log.Println(msg)
 		sendTelegramMessage(token, msg, threadId)
 	default:
-		log.Println("Unknown command:", command)
+		log.Println("Unknown command:", message)
 	}
+}
+
+type Update struct {
+	UpdateID int `json:"update_id"`
+	Message  struct {
+		Text string `json:"text"`
+		Chat struct {
+			ID int64 `json:"id"`
+		} `json:"chat"`
+	} `json:"message"`
+}
+
+type UpdatesResponse struct {
+	Ok     bool     `json:"ok"`
+	Result []Update `json:"result"`
+}
+
+var offset int = 0
+
+func fetchUpdates(token string) []Update {
+	url := fmt.Sprintf("https://api.telegram.org/bot%s/getUpdates?offset=%d&timeout=5", token, offset)
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Println("Error fetching updates:", err)
+		return nil
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	var result UpdatesResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		log.Println("JSON unmarshal error:", err)
+		return nil
+	}
+
+	if !result.Ok {
+		log.Println("getUpdates not OK:", string(body))
+		return nil
+	}
+
+	return result.Result
 }
