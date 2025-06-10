@@ -44,7 +44,7 @@ func GetTokenMap() map[string]any {
 		"dotusdt": map[string]string{
 			"4h": config.DOT4h,
 		},
-		"shib1000usdt": map[string]string{
+		"shibusdt": map[string]string{
 			"4h": config.SHIB4h,
 		},
 		"pepeusdt": map[string]string{
