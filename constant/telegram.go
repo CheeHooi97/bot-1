@@ -42,10 +42,10 @@ func GetThreadIdMap() map[string]any {
 		"dot": map[string]int64{
 			"4h": 95,
 		},
-		"shibusdt": map[string]int64{
+		"thetausdt": map[string]int64{
 			"4h": 42,
 		},
-		"pepeusdt": map[string]int64{
+		"wldusdt": map[string]int64{
 			"4h": 51,
 		},
 		"tiausdt": map[string]int64{

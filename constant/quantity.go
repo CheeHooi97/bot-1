@@ -15,8 +15,8 @@ var SymbolPrecisionMap = map[string][]int{
 	"avaxusdt":  {2, 0},
 	"tonusdt":   {3, 0},
 	"dotusdt":   {3, 0},
-	"shibusdt":  {5, 0},
-	"pepeusdt":  {5, 0},
+	"thetausdt": {4, 0},
+	"wldusdt":   {3, 0},
 	"tiausdt":   {2, 0},
 	"trumpusdt": {2, 0},
 }
@@ -34,8 +34,8 @@ var QuantityMap = map[string]float64{
 	"avaxusdt":  5,
 	"tonusdt":   40,
 	"dotusdt":   30,
-	"shibusdt":  10000,
-	"pepeusdt":  10000,
+	"thetausdt": 150,
+	"wldusdt":   100,
 	"tiausdt":   50,
 	"trumpusdt": 10,
 }
