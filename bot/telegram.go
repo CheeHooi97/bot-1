@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-func sendTelegramMessage(token, message string, threadId int64) {
+func sendTelegramMessage(token, message string) {
 	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", token)
 
 	// Use a map for the JSON payload
