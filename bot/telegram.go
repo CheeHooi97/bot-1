@@ -15,9 +15,9 @@ func sendTelegramMessage(token, message string, threadId int64) {
 
 	// Use a map for the JSON payload
 	payload := map[string]any{
-		"chat_id":           config.TelegramChatId, // Make sure it's correct
-		"message_thread_id": threadId,              // Can be int64
-		"text":              message,               // Must not be empty
+		"chat_id": config.TelegramChatId, // Make sure it's correct
+		// "message_thread_id": threadId,              // Can be int64
+		"text": message, // Must not be empty
 	}
 
 	// Marshal the map into JSON
