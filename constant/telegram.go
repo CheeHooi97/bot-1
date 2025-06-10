@@ -42,7 +42,7 @@ func GetThreadIdMap() map[string]any {
 		"dot": map[string]int64{
 			"4h": 95,
 		},
-		"shib1000usdt": map[string]int64{
+		"shibusdt": map[string]int64{
 			"4h": 42,
 		},
 		"pepeusdt": map[string]int64{
