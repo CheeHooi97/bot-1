@@ -26,8 +26,8 @@ var (
 	AVAX4h           string
 	TON4h            string
 	DOT4h            string
-	SHIB4h           string
-	PEPE4h           string
+	THETA4h          string
+	WLD4h            string
 	TIA4h            string
 	TRUMP4h          string
 	TelegramChatId   string
@@ -55,8 +55,8 @@ func LoadConfig() {
 	AVAX4h = GetEnv("AVAX_4h")
 	TON4h = GetEnv("TON_4h")
 	DOT4h = GetEnv("DOT_4h")
-	SHIB4h = GetEnv("SHIB_4h")
-	PEPE4h = GetEnv("PEPE_4h")
+	THETA4h = GetEnv("THETA_4h")
+	WLD4h = GetEnv("WLD_4h")
 	TIA4h = GetEnv("TIA_4h")
 	TRUMP4h = GetEnv("TRUMP_4h")
 	TelegramChatId = GetEnv("TELEGRAM_CHAT_ID")

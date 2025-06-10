@@ -44,11 +44,11 @@ func GetTokenMap() map[string]any {
 		"dotusdt": map[string]string{
 			"4h": config.DOT4h,
 		},
-		"shibusdt": map[string]string{
-			"4h": config.SHIB4h,
+		"thetausdt": map[string]string{
+			"4h": config.THETA4h,
 		},
-		"pepeusdt": map[string]string{
-			"4h": config.PEPE4h,
+		"wldusdt": map[string]string{
+			"4h": config.WLD4h,
 		},
 		"tiausdt": map[string]string{
 			"4h": config.TIA4h,
