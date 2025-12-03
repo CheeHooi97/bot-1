@@ -31,6 +31,7 @@ var (
 	TIA4h            string
 	TRUMP4h          string
 	TelegramChatId   string
+	DCAToken         string
 )
 
 // LoadConfig
@@ -60,6 +61,7 @@ func LoadConfig() {
 	TIA4h = GetEnv("TIA_4h")
 	TRUMP4h = GetEnv("TRUMP_4h")
 	TelegramChatId = GetEnv("TELEGRAM_CHAT_ID")
+	DCAToken = GetEnv("DCA_TOKEN")
 }
 
 func GetEnv(key string) string {
