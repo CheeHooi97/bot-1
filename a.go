@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func main() {
+func mainsss() {
 	// load config
 	config.LoadConfig()
 
