@@ -1,10 +1,12 @@
 package bot
 
 import (
-	"bot-1/config"
+	"dca-bot/constant"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -40,10 +42,10 @@ func NewDCABot(symbol string, totalUSDT float64, dropPercent float64) *DCABot {
 	}
 }
 
-func (b *DCABot) OnPrice(price float64) {
+func (b *DCABot) OnPrice(price float64, token string) {
 	if !b.Started {
 		fmt.Printf("\nDCA START — FIRST BUY at %.4f\n", price)
-		b.executeBuy(price)
+		b.executeBuy(price, token)
 		b.LastBuyPrice = price
 		b.Started = true
 		return
@@ -53,15 +55,15 @@ func (b *DCABot) OnPrice(price float64) {
 
 	if drop >= b.DropPercent {
 		fmt.Printf("PRICE DROP %.2f%% → BUY triggered\n", drop)
-		b.executeBuy(price)
+		b.executeBuy(price, token)
 		b.LastBuyPrice = price
 	}
 }
 
-func (b *DCABot) executeBuy(price float64) {
+func (b *DCABot) executeBuy(price float64, token string) {
 	if b.TotalUSDT < b.OneBuyUSDT {
 		fmt.Println("No more USDT left.")
-		sendTelegramMessage(config.DCAToken, "❗ No more USDT left for DCA.")
+		sendTelegramMessage(token, "❗ No more USDT left for DCA.")
 		return
 	}
 
@@ -88,7 +90,7 @@ func (b *DCABot) executeBuy(price float64) {
 	)
 
 	// Send Telegram message
-	sendTelegramMessage(config.DCAToken, message)
+	sendTelegramMessage(token, message)
 
 	fmt.Printf(`
 ===== DCA BUY #%d =====
@@ -111,13 +113,37 @@ func (b *DCABot) totalHoldings() float64 {
 }
 
 func StartDCAWebSocket(bot *DCABot) {
-	wsURL := "wss://stream.binance.com:9443/ws/" + strings.ToLower(bot.Symbol) + "@trade"
 
-	c, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	// Malaysia-safe endpoint (AWS mirror)
+	wsURL := "wss://data-stream.binance.com/ws/" +
+		strings.ToLower(bot.Symbol) + "@trade"
+
+	fmt.Println("Connecting to:", wsURL)
+
+	// Add safe headers (some ISPs require Origin / UA)
+	header := http.Header{}
+	header.Add("Origin", "https://binance.com")
+	header.Add("User-Agent", "Mozilla/5.0")
+
+	c, resp, err := websocket.DefaultDialer.Dial(wsURL, header)
 	if err != nil {
+		fmt.Println("❌ WebSocket handshake failed")
+
+		if resp != nil {
+			fmt.Println("Status:", resp.Status)
+			body := "<no body>"
+			if resp.Body != nil {
+				b, _ := io.ReadAll(resp.Body)
+				body = string(b)
+			}
+			fmt.Println("Response body:", body)
+		}
+
 		log.Fatal("WebSocket error:", err)
 	}
 	defer c.Close()
+
+	fmt.Println("✅ WebSocket connected successfully!")
 
 	for {
 		_, msg, err := c.ReadMessage()
@@ -134,8 +160,25 @@ func StartDCAWebSocket(bot *DCABot) {
 			continue
 		}
 
-		price, _ := strconv.ParseFloat(data.Price, 64)
-		bot.OnPrice(price)
+		price, err := strconv.ParseFloat(data.Price, 64)
+		if err != nil {
+			continue
+		}
+
+		tokenMap := constant.GetTokenMap()
+		tokenConfig, ok := tokenMap[bot.Symbol].(map[float64]string)
+		if !ok {
+			log.Println("symbol not found")
+			return
+		}
+
+		token, ok := tokenConfig[bot.DropPercent]
+		if !ok {
+			log.Println("drop percent not found")
+			return
+		}
+
+		bot.OnPrice(price, token)
 	}
 }
 

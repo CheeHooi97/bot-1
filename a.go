@@ -1,10 +1,10 @@
 package main
 
 import (
-	"bot-1/bot"
-	"bot-1/config"
-	"bot-1/constant"
 	"bufio"
+	"dca-bot/bot"
+	"dca-bot/config"
+	"dca-bot/constant"
 	"fmt"
 	"os"
 	"strconv"
