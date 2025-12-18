@@ -10,13 +10,13 @@ import (
 var (
 	BinanceApiKey    string
 	BinanceApiSecret string
-	BTC4h            string
-	BTC1h            string
-	ETH4h            string
-	ETH1h            string
-	ADA4h            string
-	BNB4h            string
-	SOL4h            string
+	BTCFuture4h      string
+	BTCFuture1h      string
+	ETHFuture4h      string
+	ETHFuture1h      string
+	ADAFuture4h      string
+	BNBFuture4h      string
+	SOLFuture4h      string
 	TelegramChatId   string
 )
 
