@@ -1,11 +1,13 @@
 package bot
 
 import (
-	"bot-1/config"
-	"bot-1/constant"
+	"archive/zip"
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
+	"dca-bot/config"
+	"dca-bot/constant"
+	"encoding/csv"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -56,7 +58,7 @@ func Bot(symbol, interval, token string, slPercent float64) {
 	stopLossPercent = slPercent
 
 	// Fetch historical candles
-	history, err := fetchHistoricalCandles(strings.ToUpper(symbol), interval)
+	history, err := loadHistoricalFromVision(strings.ToUpper(symbol), interval, 500)
 	if err != nil {
 		log.Fatal("Error fetching historical candles:", err)
 	}
@@ -80,71 +82,76 @@ func Bot(symbol, interval, token string, slPercent float64) {
 	waitForShutdown()
 }
 
+func loadHistoricalFromVision(symbol, interval string, limit int) ([]Candle, error) {
+	var all []Candle
 
-var httpClient = &http.Client{
-	Timeout: 10 * time.Second,
-}
+	now := time.Now()
+	for i := 0; len(all) < limit && i < 6; i++ {
+		t := now.AddDate(0, -i, 0)
+		ym := t.Format("2006-01")
 
-func fetchHistoricalCandles(symbol, interval string) ([]Candle, error) {
-	url := fmt.Sprintf(
-		"https://fapi.binance.com/fapi/v1/klines?symbol=%s&interval=%s&limit=200",
-		symbol,
-		interval,
-	)
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
+		candles, err := loadVisionMonth(symbol, interval, ym)
+		if err == nil {
+			all = append(candles, all...)
+		}
 	}
 
-	req.Header.Set("User-Agent", "Mozilla/5.0")
-	req.Header.Set("Accept", "application/json")
+	if len(all) < limit {
+		return nil, fmt.Errorf("not enough historical candles")
+	}
 
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return nil, err
+	return all[len(all)-limit:], nil
+}
+
+func loadVisionMonth(symbol, interval, ym string) ([]Candle, error) {
+	url := fmt.Sprintf(
+		"https://data.binance.vision/data/futures/um/monthly/klines/%s/%s/%s-%s-%s.zip",
+		symbol, interval, symbol, interval, ym,
+	)
+
+	resp, err := http.Get(url)
+	if err != nil || resp.StatusCode != 200 {
+		return nil, fmt.Errorf("vision download failed")
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("binance returned status %d", resp.StatusCode)
-	}
-
-	var data [][]any
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
-	}
+	data, _ := io.ReadAll(resp.Body)
+	zr, _ := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 
 	var candles []Candle
-	for _, item := range data {
-		candles = append(candles, Candle{
-			Open:      parseStringToFloat(item[1]),
-			High:      parseStringToFloat(item[2]),
-			Low:       parseStringToFloat(item[3]),
-			Close:     parseStringToFloat(item[4]),
-			Volume:    parseStringToFloat(item[5]),
-			CloseTime: time.UnixMilli(int64(item[6].(float64))),
-			IsFinal:   true,
-		})
-	}
+	for _, f := range zr.File {
+		rc, _ := f.Open()
+		r := csv.NewReader(rc)
 
+		for {
+			row, err := r.Read()
+			if err != nil {
+				break
+			}
+
+			candles = append(candles, Candle{
+				Open:      parseFloat(row[1]),
+				High:      parseFloat(row[2]),
+				Low:       parseFloat(row[3]),
+				Close:     parseFloat(row[4]),
+				Volume:    parseFloat(row[5]),
+				CloseTime: time.UnixMilli(parseInt(row[6])),
+				IsFinal:   true,
+			})
+		}
+		rc.Close()
+	}
 	return candles, nil
 }
 
-func fetchHistoricalCandlesWithRetry(symbol, interval string, retries int) ([]Candle, error) {
-	var lastErr error
+func parseFloat(v any) float64 {
+	f, _ := strconv.ParseFloat(v.(string), 64)
+	return f
+}
 
-	for i := 0; i < retries; i++ {
-		candles, err := fetchHistoricalCandles(symbol, interval)
-		if err == nil {
-			return candles, nil
-		}
-		lastErr = err
-		log.Printf("retry %d/%d failed: %v", i+1, retries, err)
-		time.Sleep(2 * time.Second)
-	}
-
-	return nil, lastErr
+func parseInt(s string) int64 {
+	i, _ := strconv.ParseInt(s, 10, 64)
+	return i
 }
 
 func parseStringToFloat(s any) float64 {
