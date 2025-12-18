@@ -80,13 +80,35 @@ func Bot(symbol, interval, token string, slPercent float64) {
 	waitForShutdown()
 }
 
+
+var httpClient = &http.Client{
+	Timeout: 10 * time.Second,
+}
+
 func fetchHistoricalCandles(symbol, interval string) ([]Candle, error) {
-	url := fmt.Sprintf("https://fapi.binance.com/fapi/v1/klines?symbol=%s&interval=%s", symbol, interval)
-	resp, err := http.Get(url)
+	url := fmt.Sprintf(
+		"https://fapi.binance.com/fapi/v1/klines?symbol=%s&interval=%s&limit=200",
+		symbol,
+		interval,
+	)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("User-Agent", "Mozilla/5.0")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("binance returned status %d", resp.StatusCode)
+	}
 
 	var data [][]any
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
@@ -95,24 +117,34 @@ func fetchHistoricalCandles(symbol, interval string) ([]Candle, error) {
 
 	var candles []Candle
 	for _, item := range data {
-		open := parseStringToFloat(item[1])
-		high := parseStringToFloat(item[2])
-		low := parseStringToFloat(item[3])
-		close := parseStringToFloat(item[4])
-		volume := parseStringToFloat(item[5])
-		closeTime := time.UnixMilli(int64(item[6].(float64)))
-
 		candles = append(candles, Candle{
-			Open:      open,
-			High:      high,
-			Low:       low,
-			Close:     close,
-			Volume:    volume,
-			CloseTime: closeTime,
+			Open:      parseStringToFloat(item[1]),
+			High:      parseStringToFloat(item[2]),
+			Low:       parseStringToFloat(item[3]),
+			Close:     parseStringToFloat(item[4]),
+			Volume:    parseStringToFloat(item[5]),
+			CloseTime: time.UnixMilli(int64(item[6].(float64))),
 			IsFinal:   true,
 		})
 	}
+
 	return candles, nil
+}
+
+func fetchHistoricalCandlesWithRetry(symbol, interval string, retries int) ([]Candle, error) {
+	var lastErr error
+
+	for i := 0; i < retries; i++ {
+		candles, err := fetchHistoricalCandles(symbol, interval)
+		if err == nil {
+			return candles, nil
+		}
+		lastErr = err
+		log.Printf("retry %d/%d failed: %v", i+1, retries, err)
+		time.Sleep(2 * time.Second)
+	}
+
+	return nil, lastErr
 }
 
 func parseStringToFloat(s any) float64 {
